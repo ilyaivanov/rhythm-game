@@ -39,38 +39,6 @@ void Win32InitOpenGL(HWND Window)
     ReleaseDC(Window, WindowDC);
 }
 
-// void OnSizeChange(i32 width, i32 height)
-// {
-//     glViewport(0, 0, width, height);
-
-//     // allows me to set vecrtex coords as 0..width/height, instead of -1..+1
-//     // 0,0 is bottom left, not top left
-//     // matrix in code != matrix in math notation, details at https://youtu.be/kBuaCqaCYwE?t=3084
-//     // in short: rows in math are columns in code
-//     float w = 2.0f / width;
-//     float h = 2.0f / height;
-//     GLfloat m[] = {
-//         w,
-//         0,
-//         0,
-//         0,
-//         0,
-//         h,
-//         0,
-//         0,
-//         0,
-//         0,
-//         1,
-//         0,
-//         -1,
-//         -1,
-//         0,
-//         1,
-//     };
-//     glMatrixMode(GL_PROJECTION);
-//     glLoadMatrixf(m);
-// }
-
 HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth, int windowHeight)
 {
     WNDCLASSW windowClass = {0};
@@ -81,8 +49,7 @@ HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth,
     windowClass.hCursor = LoadCursor(0, IDC_ARROW);
     // not using COLOR_WINDOW + 1 because it doesn't fucking work
     // this line fixes a flash of a white background for 1-2 frames during start
-    windowClass.hbrBackground = CreateSolidBrush(0x111111);
-    // };
+    // windowClass.hbrBackground = CreateSolidBrush(0x111111);
     RegisterClassW(&windowClass);
 
     HDC dc = GetDC(0);
@@ -100,7 +67,6 @@ HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth,
     BOOL SET_IMMERSIVE_DARK_MODE_SUCCESS = SUCCEEDED(DwmSetWindowAttribute(
         window, DWMWA_USE_IMMERSIVE_DARK_MODE, &USE_DARK_MODE, sizeof(USE_DARK_MODE)));
 
-    // DeleteObject(windowClass.hbrBackground);
     return window;
 }
 

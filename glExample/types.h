@@ -30,6 +30,16 @@ typedef struct V2i
 {
     i32 x, y;
 } V2i;
+typedef struct V2f
+{
+    f32 x, y;
+} V2f;
+
+typedef struct V3f
+{
+    f32 x, y, z;
+} V3f;
+
 typedef struct Mat4
 {
     float values[16];
@@ -47,3 +57,19 @@ typedef struct Mat4
     }
 
 #define Fail(msg) Assert(0)
+
+inline V2f V2fMult(V2f p, f32 scalar)
+{
+    return (V2f){
+        p.x * scalar,
+        p.y * scalar,
+    };
+}
+
+inline V2f V2fAdd(V2f p1, V2f p2)
+{
+    return (V2f){
+        p1.x + p2.x,
+        p1.y + p2.y,
+    };
+}
