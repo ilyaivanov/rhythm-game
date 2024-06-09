@@ -5,6 +5,7 @@
 typedef enum PerfMetric
 {
     Overall,
+    OverallWithoutSwap,
     Memory,
     Draw,
     DiBits,

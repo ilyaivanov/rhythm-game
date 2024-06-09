@@ -1,6 +1,6 @@
 #pragma once
 #include <windows.h>
-#include "types.h"
+#include "utils/types.h"
 
 HFONT consolasFont;
 

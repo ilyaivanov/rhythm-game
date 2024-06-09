@@ -25,12 +25,12 @@ set Libs=user32.lib gdi32.lib kernel32.lib dwmapi.lib  opengl32.lib
 
 IF "%arg1%" == "p" (
     echo Production build
-    cl %CommonCompilerOptions% %CompilerOptionsProd% ../glExample/main.c /link %LinkerOptions% %Libs% 
+    cl %CommonCompilerOptions% %CompilerOptionsProd% ../main.c /link %LinkerOptions% %Libs% 
 )
 
 IF NOT "%arg1%" == "p" (
     echo Development build
-    cl %CommonCompilerOptions% %CompilerOptionsDev% ../glExample/main.c /link %LinkerOptions% %Libs% 
+    cl %CommonCompilerOptions% %CompilerOptionsDev% ../main.c /link %LinkerOptions% %Libs% 
 )
 
 IF NOT "%arg1%" == "b" IF NOT "%arg2%" == "b" (

@@ -1,131 +1,137 @@
 #include <windows.h>
-#include "types.h"
+// #include <stdio.h>
+// #include <math.h>
+#include <gl/gl.h>
+
+#include "utils/all.c"
 #include "win32.c"
-#include "performance.c"
-#include "vec.c"
-#include "format.c"
-#include "font.c"
 
 #define ONE_OVER_SQUARE_ROOT_OF_TWO 0.70710678118f
 
-bool32 isRunning = 1;
-bool32 isFullscreen = 1;
+V2i clientAreaSize = {0};
+i32 isRunning = 1;
+i32 isFullscreen = 1;
+f32 appTime = 0;
+Mat4 projection;
 
-HDC dc;
-BITMAPINFO bitmapInfo;
-MyBitmap canvas;
-HBITMAP bitmap;
-
-// Player info
-V2f pos = {20.0f, 20.0f};
-f32 speed = 5.0f;
+V2f pos = {0};
+f32 speed = 40;
+f32 size = 80;
 
 char keys[256] = {0};
 
-inline void PaintRect(MyBitmap *destination, i32 offsetX, i32 offsetY, u32 width, u32 height, u32 color)
+void OnResize()
 {
-    if (offsetY < 0)
-    {
-        height += offsetY;
-        offsetY = 0;
-    }
-    // need to check bounds of the screen
-    u32 *row = (u32 *)destination->pixels + offsetX + offsetY * destination->width;
-    for (i32 y = 0; y < height; y += 1)
-    {
-        u32 *pixel = row;
-        for (i32 x = 0; x < width; x += 1)
-        {
-            if ((y + offsetY) >= 0 && (x + offsetX) >= 0 && y + offsetY < destination->height && x + offsetX < destination->width)
-                *pixel = color;
-            pixel += 1;
-        }
-        row += destination->width;
-    }
+    glViewport(0, 0, clientAreaSize.x, clientAreaSize.y);
+    projection = CreateScreenProjection(clientAreaSize);
 }
 
 LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message)
+    if (message == WM_DESTROY)
     {
-    case WM_QUIT:
-    case WM_DESTROY:
-        PostQuitMessage(0);
         isRunning = 0;
-        break;
-
-    case WM_PAINT:
-        PAINTSTRUCT paint;
-        BeginPaint(window, &paint);
+    }
+    else if (message == WM_SIZE)
+    {
+        clientAreaSize.x = LOWORD(lParam);
+        clientAreaSize.y = HIWORD(lParam);
+        OnResize();
+        InvalidateRect(window, NULL, TRUE);
+    }
+    else if (message == WM_PAINT)
+    {
+        PAINTSTRUCT paint = {0};
+        HDC dc = BeginPaint(window, &paint);
+        // Draw();
         EndPaint(window, &paint);
-        break;
-
-    case WM_SIZE:
-        // appScale = (float)GetDeviceCaps(dc, LOGPIXELSY) / (float)USER_DEFAULT_SCREEN_DPI;
-        canvas.width = LOWORD(lParam);
-        canvas.height = HIWORD(lParam);
-        canvas.bytesPerPixel = 4;
-
-        if (canvas.pixels)
-            DeleteObject(bitmap);
-
-        InitBitmapInfo(&bitmapInfo, canvas.width, canvas.height);
-
-        bitmap = CreateDIBSection(dc, &bitmapInfo, DIB_RGB_COLORS, &canvas.pixels, 0, 0);
-
-        SelectObject(dc, bitmap);
-
-        break;
-
-    case WM_KEYDOWN:
+        SwapBuffers(dc);
+    }
+    else if (message == WM_KEYDOWN)
+    {
         if (wParam < 256)
             keys[wParam] = 1;
+        if (wParam == VK_SPACE)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
         if (wParam == VK_F11)
         {
             isFullscreen = !isFullscreen;
             SetFullscreen(window, isFullscreen);
         }
-
-        break;
-    case WM_KEYUP:
+    }
+    else if (message == WM_KEYUP)
+    {
         if (wParam < 256)
             keys[wParam] = 0;
-        break;
+        if (wParam == VK_SPACE)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+
     return DefWindowProc(window, message, wParam, lParam);
 }
 
-void WinMainCRTStartup()
+GLuint uiProgram;
+GLuint vertexBuffer;
+GLuint vertexArray;
+
+#define POINTS_PER_VERTEX 2
+float vertices[] = {0.0f, 0.0f,
+                    1.0f, 0.0f,
+                    0.0f, 1.0f,
+                    1.0f, 1.0f};
+
+void __stdcall WinMainCRTStartup()
 {
     InitPerf();
 
+    HINSTANCE instance = GetModuleHandle(0);
     PreventWindowsDPIScaling();
-    dc = CreateCompatibleDC(0);
+    HWND window = OpenAppWindowWithSize(instance, OnEvent, 1800, 1000);
+    HDC dc = GetDC(window);
 
-    InitMyFont(dc);
-    HWND window = OpenWindow(OnEvent, 0x222222);
-    HDC windowDC = GetDC(window);
+    Win32InitOpenGL(window, dc);
+    OnResize();
+    InitFunctions();
 
     if (isFullscreen)
         SetFullscreen(window, isFullscreen);
 
-    MSG msg;
+    uiProgram = CreateProgram("..\\shaders\\primitives.vs", "..\\shaders\\primitives.fs");
 
+    glGenBuffers(1, &vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &vertexArray);
+
+    glBindVertexArray(vertexArray);
+    size_t stride = POINTS_PER_VERTEX * sizeof(float);
+    glVertexAttribPointer(0, POINTS_PER_VERTEX, GL_FLOAT, GL_FALSE, stride, (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // glEnable(GL_DEPTH_TEST);
+
+    glUseProgram(uiProgram);
+
+    GLint projectionLocation = glGetUniformLocation(uiProgram, "projection");
+    GLint viewLocation = glGetUniformLocation(uiProgram, "view");
     while (isRunning)
     {
         StartMetric(Overall);
+        StartMetric(OverallWithoutSwap);
+        MSG msg;
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
-            DispatchMessageA(&msg);
+            DispatchMessage(&msg);
         }
-        memset(canvas.pixels, 0x1c, canvas.bytesPerPixel * canvas.width * canvas.height);
 
         V2f delta = {0};
         if (keys['W'])
-            delta.y = -1.0f;
-        else if (keys['S'])
             delta.y = 1.0f;
+        else if (keys['S'])
+            delta.y = -1.0f;
 
         if (keys['A'])
             delta.x = -1.0f;
@@ -137,19 +143,24 @@ void WinMainCRTStartup()
 
         delta = V2fMult(delta, speed);
 
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         pos = V2fAdd(pos, delta);
+        V3f basePosition = {pos.x, pos.y, 0.0f};
 
-        PaintRect(&canvas, pos.x, pos.y, 40, 40, 0xffffff);
+        Mat4 model = Mat4ScaleV3f(Mat4TranslateV3f(Mat4Identity(), basePosition), (V3f){size, size, 0});
+        glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
+        glUniformMatrix4fv(viewLocation, 1, GL_TRUE, model.values);
 
-        char buff[40];
-        i32 len = FormatNumber(GetMicrosecondsFor(Overall) / 1000, buff);
-        TextOutA(dc, canvas.width - 80, canvas.height - 40, buff, len);
+        glBindVertexArray(vertexArray);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
 
-        BitBlt(windowDC, 0, 0, canvas.width, canvas.height, dc, 0, 0, SRCCOPY);
+        EndMetric(OverallWithoutSwap);
+        SwapBuffers(dc);
 
-        Sleep(10); // TODO: proper FPS handling needed, this is just now not to burn CPU
+        appTime += 16.66666f;
         EndMetric(Overall);
     }
-
     ExitProcess(0);
 }
