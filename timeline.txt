@@ -71,3 +71,15 @@ Steps to 0.1v
     - Add small imprecision to player shots. 
     - Add player speed to bullets speed.  
 *** At this stage I have a minimal playable game with set of parameters to change ***
+
+Variations in the game
+- Monster types and their variations
+- Leveling and skills
+- Different Characters 
+- Drops
+- Locations
+- Bosses
+- Progressions (like a tree of different levels, like on Geometry Wars 3)
+- Resets
+
+Each level is a different song. In order to finish it, I need to listen to song to the end and survive. 
