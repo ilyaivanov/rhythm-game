@@ -3,6 +3,21 @@ Create a shooting game (close to Geometry Wars or Nova Drift), but the game is h
 
 I probably need either a separate tool or integrated into a game, which would allow me to place markers into a track. 
 
+Extra Ideas
+- There are many monster types (walker, chaser, etc). What are some monster variations? 
+    - small, middle and big like in Pixel Purge
+    - bosses and minions like in diablo 2
+
+
+Difficulty Parameters
+- Monster speed, fire rate, spawn time. 
+- Extra monsters, probability of harder monsters
+
+
+How music affects gameplay
+- Monster can spawn on a beat
+- Extract different types of beat, so that different things can happen on different types of beats. 
+- Monster can fire, dodge, move, teleport on a beat
 
 Prototype 0.1v 
 Create a game which is a bare bones of pixelars or geometry wars. You move the player around, shot different types of enemies, have regular sound, minimal power-ups. Just to get overall infra into place. 
@@ -40,3 +55,19 @@ Plan: different types of enemies, better collision.
 9:20 - 9:40 better rect collision
 9:40 - 10:20 working on a Wall Walker enemy type    
 11:00 - 11:10working on this document
+
+
+Steps to 0.1v
+    - Finish with fonts
+    - Show score (monsters killed for now) and spawn rate
+    - Gradualy increase spawn rate, monster average speed, monster types to spawn. Add chances to spawn several monsters at the same time. 
+    - Automatically shot every 3 bullets per second
+    - Add 3 health points. Add immunity for 2 seconds after hit. 
+    - Add 3 game states. Start, game and end.
+    ? I have difficulty increasing, I don't have any means to increase power of the player. 
+    - Powerups
+       - For now increase rate of fire each 10 kills. New bullet on 50 kills. 
+       - Or monsters can drop permanent boosts, like fire rate, bullet count
+    - Add small imprecision to player shots. 
+    - Add player speed to bullets speed.  
+*** At this stage I have a minimal playable game with set of parameters to change ***
