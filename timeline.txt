@@ -1,11 +1,26 @@
 Idea of a prototype
 Create a shooting game (close to Geometry Wars or Nova Drift), but the game is heavily influenced by music. The key question for the prototype - can I create a game where influence is not just visual\aethtetic, but affects mechanics of the game, like when enemies spawn, when they shot, how they move, etc. 
 
+I probably need either a separate tool or integrated into a game, which would allow me to place markers into a track. 
+
 
 Prototype 0.1v 
 Create a game which is a bare bones of pixelars or geometry wars. You move the player around, shot different types of enemies, have regular sound, minimal power-ups. Just to get overall infra into place. 
+Features: 
+    - Types of monsters: walker, chaser, circular shooter, wall crawling shooter
+    - Increasing difficulty
+    - Particle effects 
+    - Animations for enemies appear, die, shot
+    - Audio framework for circular buffer
+    - Player health
+    - Game state: Start, Gaming, End
+    - HUDs: score, difficulty, killed, maybe XP? 
+    - Leveling? 
+    - Power-ups? 
 
 Backlog
+1. Set isAlive for bullets out of screen
+2. Better player controls
 
 Day 1 08.06.24 Sat
 Bootstrap a project. Software renderer. Add an example of OpenGL renderer from my previous project. 
@@ -15,5 +30,6 @@ Start writing game logic - player movement, enemy movement and spawning, fire bu
 
 Day 3 10.06.24 Mon
 Plan: different types of enemies, better collision. 
-8:40 - 8:50 - writing this document
-9:20 - 
+8:40 - 8:50 writing this document
+9:20 - 9:40 better rect collision
+9:40 - 10:20 working on a Wall Walker enemy type    

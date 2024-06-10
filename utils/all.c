@@ -5,3 +5,4 @@
 #include "performance.c"
 #include "format.c"
 #include "random.c"
+#include "collision.c"

@@ -48,7 +48,7 @@ void UpdateBullets()
     {
         for (i32 j = 0; j < ArrayLength(enemies); j++)
         {
-            if (enemies[j].isAlive && bullets[i].isAlive && V2fDistance(bullets[i].pos, enemies[j].pos) < enemySize)
+            if (enemies[j].isAlive && bullets[i].isAlive && CheckTwoSquareOverlap(bullets[i].pos, bulletSize, enemies[j].pos, enemySize))
             {
                 enemies[j].isAlive = 0;
                 bullets[i].isAlive = 0;

@@ -157,8 +157,8 @@ void __stdcall WinMainCRTStartup()
         pos.x = Clamp(pos.x, 0, clientAreaSize.x - playerSize);
         pos.y = Clamp(pos.y, 0, clientAreaSize.y - playerSize);
 
-        UpdateEnemies(clientAreaSize);
         UpdateBullets(delta);
+        UpdateEnemies(clientAreaSize, pos);
 
         // Draw
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -173,8 +173,8 @@ void __stdcall WinMainCRTStartup()
         glBindVertexArray(vertexArray);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
 
+        DrawEnemies(viewLocation, colorLocation, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y});
         DrawBullets(viewLocation, colorLocation);
-        DrawEnemies(viewLocation, colorLocation);
 
         EndMetric(OverallWithoutSwap);
         SwapBuffers(dc);
