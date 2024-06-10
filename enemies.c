@@ -17,8 +17,6 @@ typedef struct Enemy
     EnemyType type;
 
     f32 speed;
-
-    // Walker and Chaser
     V2f pos;
 
     // Walker
@@ -27,6 +25,7 @@ typedef struct Enemy
     // WallShooter
     f32 screenWallPosition;
     i32 isClockWise;
+    f32 secToNextShoot;
 
 } Enemy;
 
@@ -94,18 +93,20 @@ void SpawnEnemy(V2i clientAreaSize)
             enemy->isAlive = 1;
 
             i32 typeChoise = RandomEnemyChoice(10);
-            if (typeChoise < -1)
+            if (typeChoise < 2)
                 enemy->type = Chaser;
-            else if (typeChoise < 30)
+            else if (typeChoise < 3)
                 enemy->type = WallShooter;
             else
                 enemy->type = Walker;
 
+            enemy->speed = RandomF32(&enemySeries, minEnemySpeed, maxEnemySpeed);
+
             if (enemy->type == WallShooter)
             {
-                // enemy->screenWallPosition = RandomEnemyChoice(clientAreaSize.x * 2 + clientAreaSize.y * 2);
-                enemy->screenWallPosition = RandomEnemyChoice(1500);
+                enemy->screenWallPosition = RandomEnemyChoice(clientAreaSize.x * 2 + clientAreaSize.y * 2);
                 enemy->isClockWise = CoinFlip();
+                enemy->secToNextShoot = RandomF32(&enemySeries, 0.5f, 2.0f);
             }
             else
             {
@@ -142,6 +143,7 @@ void SpawnEnemy(V2i clientAreaSize)
     }
 }
 
+void Fire(V2f from, V2f to, BulletType type, f32 speed, f32 size);
 void UpdateEnemies(V2i clientAreaSize, V2f playerPos)
 {
     timeToSpan -= 16.666f;
@@ -158,22 +160,34 @@ void UpdateEnemies(V2i clientAreaSize, V2f playerPos)
         {
             if (enemy->type == Walker)
             {
-                enemy->pos = V2fAdd(enemy->pos, V2fMult(enemy->direction, enemySpeed));
+                enemy->pos = V2fAdd(enemy->pos, V2fMult(enemy->direction, enemy->speed));
                 if (!IsPointInsideRect((V2f){0, 0}, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y}, enemy->pos))
                     enemy->isAlive = 0;
             }
             else if (enemy->type == Chaser)
             {
                 V2f direction = V2fNormalize(V2fDiff(playerPos, enemy->pos));
-                enemy->pos = V2fAdd(enemy->pos, V2fMult(direction, enemySpeed));
+                enemy->pos = V2fAdd(enemy->pos, V2fMult(direction, enemy->speed));
             }
             else if (enemy->type == WallShooter)
             {
-                enemy->screenWallPosition += enemySpeed * 5;
+                enemy->screenWallPosition += enemy->speed * (enemy->isClockWise ? +1 : -1);
 
                 f32 maxPos = clientAreaSize.y * 2 + clientAreaSize.x * 2;
                 if (enemy->screenWallPosition > maxPos)
                     enemy->screenWallPosition = enemy->screenWallPosition - maxPos;
+                if (enemy->screenWallPosition < 0)
+                    enemy->screenWallPosition = enemy->screenWallPosition + maxPos;
+
+                enemy->pos = V2fDiffScalar(BoundaryPositionToPoint(enemy->screenWallPosition, clientAreaSize.x, clientAreaSize.y), enemySize / 2);
+
+                enemy->secToNextShoot -= 16.0f / 1000.0f;
+                if (enemy->secToNextShoot < 0)
+                {
+                    f32 bulletSpeed = RandomF32(&enemySeries, minEnemyBulletSpeed, maxEnemyBulletSpeed);
+                    Fire(enemy->pos, playerPos, EnemyBullet, bulletSpeed, enemyBulletSize);
+                    enemy->secToNextShoot = RandomF32(&enemySeries, 0.5f, 2.0f);
+                }
             }
         }
     }
@@ -187,11 +201,7 @@ void DrawEnemies(GLint viewLocation, GLint colorLocation, V2f screen)
         if (enemy->isAlive)
         {
 
-            V2f pos;
-            if (enemy->type == WallShooter)
-                pos = V2fDiffScalar(BoundaryPositionToPoint(enemy->screenWallPosition, screen.x, screen.y), enemySize / 2);
-            else
-                pos = enemy->pos;
+            V2f pos = enemy->pos;
 
             if (enemy->type == Walker)
                 glUniform4f(colorLocation, 1.0f, 0.3f, 0.3f, 1.0f);

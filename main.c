@@ -18,7 +18,7 @@ i32 isFullscreen = 1;
 f32 appTime = 0;
 Mat4 projection;
 
-V2f pos = {0};
+V2f playerPosition = {0};
 
 char keys[256] = {0};
 
@@ -72,7 +72,7 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     else if (message == WM_LBUTTONDOWN)
     {
         V2f mouse = {GET_X_LPARAM(lParam), clientAreaSize.y - GET_Y_LPARAM(lParam)};
-        Fire(V2fAddScalar(pos, playerSize / 2), mouse);
+        Fire(V2fAddScalar(playerPosition, playerSize / 2), mouse, PlayerBullet, playerBulletSpeed, playerBulletSize);
     }
 
     return DefWindowProc(window, message, wParam, lParam);
@@ -152,13 +152,13 @@ void __stdcall WinMainCRTStartup()
             delta = V2fMult(delta, ONE_OVER_SQUARE_ROOT_OF_TWO);
 
         delta = V2fMult(delta, playerSpeed);
-        pos = V2fAdd(pos, delta);
+        playerPosition = V2fAdd(playerPosition, delta);
 
-        pos.x = Clamp(pos.x, 0, clientAreaSize.x - playerSize);
-        pos.y = Clamp(pos.y, 0, clientAreaSize.y - playerSize);
+        playerPosition.x = Clamp(playerPosition.x, 0, clientAreaSize.x - playerSize);
+        playerPosition.y = Clamp(playerPosition.y, 0, clientAreaSize.y - playerSize);
 
-        UpdateBullets(delta);
-        UpdateEnemies(clientAreaSize, pos);
+        UpdateBullets(playerPosition, clientAreaSize);
+        UpdateEnemies(clientAreaSize, playerPosition);
 
         // Draw
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -167,7 +167,7 @@ void __stdcall WinMainCRTStartup()
         glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
         glUniform4f(colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
 
-        Mat4 view = Mat4ScaleUniform(Mat4TranslateV2f(Mat4Identity(), pos), playerSize);
+        Mat4 view = Mat4ScaleUniform(Mat4TranslateV2f(Mat4Identity(), playerPosition), playerSize);
         glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view.values);
 
         glBindVertexArray(vertexArray);

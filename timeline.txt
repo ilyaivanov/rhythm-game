@@ -36,7 +36,9 @@ Start writing game logic - player movement, enemy movement and spawning, fire bu
 
 Day 3 10.06.24 Mon
 Plan: different types of enemies, better collision. 
-8:40 - 8:50 writing this document
-9:20 - 9:40 better rect collision
-9:40 - 10:20 working on a Wall Walker enemy type    
-11:00 - 11:10working on this document
+08:40 - 08:50 writing this document
+09:20 - 09:40 better rect collision
+09:40 - 10:20 working on a Wall Walker enemy type    
+11:00 - 11:10 working on this document
+12:10 - 12:15 random float one to zero 
+12:40 - random enemy speed. Walker firing at you
