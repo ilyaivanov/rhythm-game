@@ -4,3 +4,4 @@
 #include "math.c"
 #include "performance.c"
 #include "format.c"
+#include "random.c"

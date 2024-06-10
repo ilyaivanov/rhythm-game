@@ -15,8 +15,6 @@ int _fltused = 0x9875;
 
 void Win32InitOpenGL(HWND Window, HDC dc)
 {
-    // HDC WindowDC = GetDC(Window);
-
     PIXELFORMATDESCRIPTOR DesiredPixelFormat = {0};
     DesiredPixelFormat.nSize = sizeof(DesiredPixelFormat);
     DesiredPixelFormat.nVersion = 1;
@@ -35,8 +33,6 @@ void Win32InitOpenGL(HWND Window, HDC dc)
     HGLRC OpenGLRC = wglCreateContext(dc);
     if (!wglMakeCurrent(dc, OpenGLRC))
         Fail("Failed to initialize OpenGL");
-
-    // ReleaseDC(Window, WindowDC);
 }
 
 HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth, int windowHeight)
@@ -49,7 +45,7 @@ HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth,
     windowClass.hCursor = LoadCursor(0, IDC_ARROW);
     // not using COLOR_WINDOW + 1 because it doesn't fucking work
     // this line fixes a flash of a white background for 1-2 frames during start
-    // windowClass.hbrBackground = CreateSolidBrush(0x111111);
+    windowClass.hbrBackground = CreateSolidBrush(0x111111);
     RegisterClassW(&windowClass);
 
     HDC dc = GetDC(0);

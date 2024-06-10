@@ -1,10 +1,14 @@
 #include <windows.h>
+#include <windowsx.h> // this is used for GET_X_PARAM and GET_Y_PARAM
 // #include <stdio.h>
 // #include <math.h>
 #include <gl/gl.h>
 
 #include "utils/all.c"
 #include "win32.c"
+#include "constants.c"
+#include "bullets.c"
+#include "enemies.c"
 
 #define ONE_OVER_SQUARE_ROOT_OF_TWO 0.70710678118f
 
@@ -15,8 +19,6 @@ f32 appTime = 0;
 Mat4 projection;
 
 V2f pos = {0};
-f32 speed = 40;
-f32 size = 80;
 
 char keys[256] = {0};
 
@@ -67,6 +69,11 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
         if (wParam == VK_SPACE)
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    else if (message == WM_LBUTTONDOWN)
+    {
+        V2f mouse = {GET_X_LPARAM(lParam), clientAreaSize.y - GET_Y_LPARAM(lParam)};
+        Fire(V2fAddScalar(pos, playerSize / 2), mouse);
+    }
 
     return DefWindowProc(window, message, wParam, lParam);
 }
@@ -91,8 +98,7 @@ void __stdcall WinMainCRTStartup()
     HDC dc = GetDC(window);
 
     Win32InitOpenGL(window, dc);
-    OnResize();
-    InitFunctions();
+    InitGlFunctions();
 
     if (isFullscreen)
         SetFullscreen(window, isFullscreen);
@@ -116,6 +122,9 @@ void __stdcall WinMainCRTStartup()
 
     GLint projectionLocation = glGetUniformLocation(uiProgram, "projection");
     GLint viewLocation = glGetUniformLocation(uiProgram, "view");
+    GLint colorLocation = glGetUniformLocation(uiProgram, "color");
+
+    InitEnemies();
     while (isRunning)
     {
         StartMetric(Overall);
@@ -127,6 +136,7 @@ void __stdcall WinMainCRTStartup()
             DispatchMessage(&msg);
         }
 
+        // Update
         V2f delta = {0};
         if (keys['W'])
             delta.y = 1.0f;
@@ -141,20 +151,30 @@ void __stdcall WinMainCRTStartup()
         if (delta.x != 0.0f && delta.y != 0.0f)
             delta = V2fMult(delta, ONE_OVER_SQUARE_ROOT_OF_TWO);
 
-        delta = V2fMult(delta, speed);
+        delta = V2fMult(delta, playerSpeed);
+        pos = V2fAdd(pos, delta);
 
+        pos.x = Clamp(pos.x, 0, clientAreaSize.x - playerSize);
+        pos.y = Clamp(pos.y, 0, clientAreaSize.y - playerSize);
+
+        UpdateEnemies(clientAreaSize);
+        UpdateBullets(delta);
+
+        // Draw
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        pos = V2fAdd(pos, delta);
-        V3f basePosition = {pos.x, pos.y, 0.0f};
-
-        Mat4 model = Mat4ScaleV3f(Mat4TranslateV3f(Mat4Identity(), basePosition), (V3f){size, size, 0});
         glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
-        glUniformMatrix4fv(viewLocation, 1, GL_TRUE, model.values);
+        glUniform4f(colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+
+        Mat4 view = Mat4ScaleUniform(Mat4TranslateV2f(Mat4Identity(), pos), playerSize);
+        glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view.values);
 
         glBindVertexArray(vertexArray);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
+
+        DrawBullets(viewLocation, colorLocation);
+        DrawEnemies(viewLocation, colorLocation);
 
         EndMetric(OverallWithoutSwap);
         SwapBuffers(dc);

@@ -2,6 +2,17 @@
 #include "types.h"
 #include "xmmintrin.h"
 
+// Floats
+
+inline f32 Clamp(f32 val, f32 min, f32 max)
+{
+    if (val > max)
+        return max;
+    if (val < min)
+        return min;
+    return val;
+}
+
 inline float Sqrt(const float val)
 {
     return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(val)));
@@ -35,6 +46,31 @@ inline V2f V2fMult(V2f p, f32 scalar)
 inline V2f V2fAdd(V2f p1, V2f p2)
 {
     return (V2f){p1.x + p2.x, p1.y + p2.y};
+}
+
+inline V2f V2fAddScalar(V2f p1, f32 scalar)
+{
+    return (V2f){p1.x + scalar, p1.y + scalar};
+}
+
+inline V2f V2fDiffScalar(V2f p1, f32 scalar)
+{
+    return (V2f){p1.x - scalar, p1.y - scalar};
+}
+
+inline V2f V2fDiff(V2f p1, V2f p2)
+{
+    return (V2f){p1.x - p2.x, p1.y - p2.y};
+}
+
+inline V2f V2fNormalize(V2f v)
+{
+    float magnitude = Sqrt(v.x * v.x + v.y * v.y);
+
+    if (magnitude == 0.0f)
+        return v;
+    else
+        return (V2f){v.x / magnitude, v.y / magnitude};
 }
 
 //
@@ -71,6 +107,13 @@ inline Mat4 Mat4TranslateV3f(Mat4 mat, V3f v)
     return mat;
 }
 
+inline Mat4 Mat4TranslateV2f(Mat4 mat, V2f v)
+{
+    mat.values[3 + 0 * 4] += v.x;
+    mat.values[3 + 1 * 4] += v.y;
+    return mat;
+}
+
 inline Mat4 Mat4Scale1f(Mat4 mat, float v)
 {
     mat.values[0 + 0 * 4] *= v;
@@ -84,6 +127,14 @@ inline Mat4 Mat4ScaleV3f(Mat4 mat, V3f v)
     mat.values[0 + 0 * 4] *= v.x;
     mat.values[1 + 1 * 4] *= v.y;
     mat.values[2 + 2 * 4] *= v.z;
+    return mat;
+}
+
+inline Mat4 Mat4ScaleUniform(Mat4 mat, f32 scalar)
+{
+    mat.values[0 + 0 * 4] *= scalar;
+    mat.values[1 + 1 * 4] *= scalar;
+    mat.values[2 + 2 * 4] *= scalar;
     return mat;
 }
 
