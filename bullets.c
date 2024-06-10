@@ -40,16 +40,21 @@ void Fire(V2f from, V2f to, BulletType type, f32 speed, f32 size)
     }
 }
 
-void UpdateBullets(V2f playerPos, V2i screen)
+inline V2f BulletCenter(Bullet *bullet)
 {
-    for (i32 i = 0; i < ArrayLength(bullets); i++)
-    {
-        if (bullets[i].isAlive)
-        {
-            bullets[i].pos = V2fAdd(bullets[i].pos, V2fMult(bullets[i].direction, bullets[i].speed));
-        }
-    }
+    f32 size = bullet->type == PlayerBullet ? playerBulletSize : enemyBulletSize;
+    return V2fAddScalar(bullet->pos, size / 2);
+}
 
+inline V2f EnemyCenter(Enemy *enemy)
+{
+    return V2fAddScalar(enemy->pos, enemySize / 2);
+}
+
+void Burst(V2f from, V3f color);
+
+void HandleCollisions(V2f playerPos, V2i screen)
+{
     for (i32 i = 0; i < ArrayLength(bullets); i++)
     {
         Bullet *bullet = &bullets[i];
@@ -60,16 +65,38 @@ void UpdateBullets(V2f playerPos, V2i screen)
             {
                 enemy->isAlive = 0;
                 bullet->isAlive = 0;
+
+                V3f color;
+                if (enemy->type == Walker)
+                    color = (V3f){1.0f, 0.3f, 0.3f};
+                else if (enemy->type == WallShooter)
+                    color = (V3f){0.8f, 0.5f, 0.8f};
+                else
+                    color = (V3f){0.3f, 0.8f, 0.8f};
+
+                Burst(EnemyCenter(enemy), color);
             }
         }
 
         if (bullet->type == EnemyBullet && CheckTwoSquareOverlap(bullet->pos, bullet->size, playerPos, playerSize))
         {
             bullet->isAlive = 0;
+            // Hit on Player
         }
 
         if (!IsPointInsideRect((V2f){0, 0}, (V2f){(f32)screen.x, (f32)screen.y}, bullet->pos))
             bullet->isAlive = 0;
+    }
+}
+
+void UpdateBullets()
+{
+    for (i32 i = 0; i < ArrayLength(bullets); i++)
+    {
+        if (bullets[i].isAlive)
+        {
+            bullets[i].pos = V2fAdd(bullets[i].pos, V2fMult(bullets[i].direction, bullets[i].speed));
+        }
     }
 }
 

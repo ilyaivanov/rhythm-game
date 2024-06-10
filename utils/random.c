@@ -94,3 +94,11 @@ inline f32 RandomF32(RandomSeries *series, f32 min, f32 max)
 {
     return min + RandomF32Normal(series) * (max - min);
 }
+
+inline V2f RandomUnitVector(RandomSeries *series)
+{
+    float rad = RandomF32(series, 0.0f, 2 * E_PI);
+    V2f res;
+    SinCos(rad, &res.y, &res.x);
+    return res;
+}

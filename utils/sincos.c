@@ -2,6 +2,7 @@
 
 // sin cos taken from https://guide.handmadehero.org/code/day440
 #define R32_EPSILON 1.19209290e-7f
+#define E_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062f
 
 float XSinCosX[][3] = {
     {-3.00001740e+00f, -1.41102776e-01f, -9.89994943e-01f},

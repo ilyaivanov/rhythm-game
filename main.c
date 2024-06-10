@@ -9,6 +9,7 @@
 #include "constants.c"
 #include "bullets.c"
 #include "enemies.c"
+#include "particles.c"
 
 #define ONE_OVER_SQUARE_ROOT_OF_TWO 0.70710678118f
 
@@ -116,7 +117,8 @@ void __stdcall WinMainCRTStartup()
     glVertexAttribPointer(0, POINTS_PER_VERTEX, GL_FLOAT, GL_FALSE, stride, (void *)0);
     glEnableVertexAttribArray(0);
 
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(uiProgram);
 
@@ -125,6 +127,7 @@ void __stdcall WinMainCRTStartup()
     GLint colorLocation = glGetUniformLocation(uiProgram, "color");
 
     InitEnemies();
+    InitParticles();
     while (isRunning)
     {
         StartMetric(Overall);
@@ -157,8 +160,11 @@ void __stdcall WinMainCRTStartup()
         playerPosition.x = Clamp(playerPosition.x, 0, clientAreaSize.x - playerSize);
         playerPosition.y = Clamp(playerPosition.y, 0, clientAreaSize.y - playerSize);
 
+        HandleCollisions(playerPosition, clientAreaSize);
+
         UpdateBullets(playerPosition, clientAreaSize);
         UpdateEnemies(clientAreaSize, playerPosition);
+        UpdateParticles();
 
         // Draw
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -173,6 +179,7 @@ void __stdcall WinMainCRTStartup()
         glBindVertexArray(vertexArray);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
 
+        DrawParticles(viewLocation, colorLocation);
         DrawEnemies(viewLocation, colorLocation, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y});
         DrawBullets(viewLocation, colorLocation);
 
