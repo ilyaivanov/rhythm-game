@@ -1,0 +1,19 @@
+Idea of a prototype
+Create a shooting game (close to Geometry Wars or Nova Drift), but the game is heavily influenced by music. The key question for the prototype - can I create a game where influence is not just visual\aethtetic, but affects mechanics of the game, like when enemies spawn, when they shot, how they move, etc. 
+
+
+Prototype 0.1v 
+Create a game which is a bare bones of pixelars or geometry wars. You move the player around, shot different types of enemies, have regular sound, minimal power-ups. Just to get overall infra into place. 
+
+Backlog
+
+Day 1 08.06.24 Sat
+Bootstrap a project. Software renderer. Add an example of OpenGL renderer from my previous project. 
+
+Day 2 09.06.24 Sun
+Start writing game logic - player movement, enemy movement and spawning, fire bullets and first steps to collision detection. Add a random generator from Handmande Hero day 457 sourcecode
+
+Day 3 10.06.24 Mon
+Plan: different types of enemies, better collision. 
+8:40 - 8:50 - writing this document
+9:20 - 
