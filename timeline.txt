@@ -81,5 +81,6 @@ Variations in the game
 - Bosses
 - Progressions (like a tree of different levels, like on Geometry Wars 3)
 - Resets
+- Coherency (meaning different systems work together to progress you in the game, so that you can experience different content, like bosses, locations, levels, epic drops, etc)
 
 Each level is a different song. In order to finish it, I need to listen to song to the end and survive. 
