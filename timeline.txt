@@ -21,6 +21,12 @@ Features:
 Backlog
 1. Set isAlive for bullets out of screen
 2. Better player controls
+3. Steering behaviour for chasing enemies. Consider Brotato as a good example, where enemies follow you ,but do not join into the exact same postion on the screen. 
+4. Check Nova Drif as an example how they handle different screen resolutions 
+
+Random Ideas
+1. Brotato has a time-based levels, which suit me good in terms of track length. Maybe I can create a similar to brotato mechanics, but focus on music affecting enemies. 
+
 
 Day 1 08.06.24 Sat
 Bootstrap a project. Software renderer. Add an example of OpenGL renderer from my previous project. 
@@ -33,3 +39,4 @@ Plan: different types of enemies, better collision.
 8:40 - 8:50 writing this document
 9:20 - 9:40 better rect collision
 9:40 - 10:20 working on a Wall Walker enemy type    
+11:00 - 11:10working on this document
