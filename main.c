@@ -142,8 +142,18 @@ void StartGame()
     gameState = GamePlaying;
     playerHealth = playerMaxHealth;
     playerPosition = (V2f){clientAreaSize.x / 2 - playerSize / 2, clientAreaSize.y / 2 - playerSize / 2};
+    enemiesPerSecond = startingEnemiesPerSecond;
+    timeToSpan = 0;
+
+    // reset prev game
     memset(&enemies, 0, ArrayLength(enemies) * sizeof(Enemy));
     memset(&bullets, 0, ArrayLength(bullets) * sizeof(Bullet));
+
+    score = 0;
+    mostersSpawned = 0;
+
+    // I do not reset RandomSeries to have each consequtive game a unique experience.
+    // Initial seed is still the game, thus if you restart the exe file - you will have the same game
 }
 
 void __stdcall WinMainCRTStartup()

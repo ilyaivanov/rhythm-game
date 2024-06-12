@@ -31,8 +31,9 @@ typedef struct Enemy
 
 Enemy enemies[256];
 
+f32 startingEnemiesPerSecond = 2.0f;
 f32 timeToSpan = 0;
-f32 enemiesPerSecond = 2.0f; // monters per second
+f32 enemiesPerSecond = 0.0f; // monters per second
 
 u32 mostersSpawned = 0;
 f32 spawnAcceleration = 0.05; // monters per second squared
