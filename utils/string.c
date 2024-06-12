@@ -62,7 +62,13 @@ void StrBuffAppendf32(StrBuff *buff, f32 val, u32 digitsAfterPoint)
     }
 }
 
-void StrBuffClear(StrBuff *buff)
+inline void StrBuffClear(StrBuff *buff)
 {
     buff->size = 0;
+}
+
+inline void StrBuffSetStr(StrBuff *buff, char *str)
+{
+    StrBuffClear(buff);
+    StrBuffAppendStr(buff, str);
 }

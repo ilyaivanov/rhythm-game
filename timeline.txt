@@ -40,6 +40,8 @@ Backlog
 4. Check Nova Drif as an example how they handle different screen resolutions 
 5. Drawing font (monospaced Consolas) via OpenGL
 6. Extract and localize all OpenGL specific stuff
+7. Extract all state. This is simply dependencies and will allow to start game in arbitrary state for quickier testing. 
+
 
 Random Ideas
 1. Brotato has a time-based levels, which suit me good in terms of track length. Maybe I can create a similar to brotato mechanics, but focus on music affecting enemies. 

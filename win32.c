@@ -66,6 +66,18 @@ HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth,
     return window;
 }
 
+// Increasing Read Bandwidth with SIMD Instructions https://www.computerenhance.com/p/increasing-read-bandwidth-with-simd
+#pragma function(memset)
+void *memset(void *dest, int c, size_t count)
+{
+    char *bytes = (char *)dest;
+    while (count--)
+    {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
+
 // DPI Scaling
 // user32.dll is linked statically, so dynamic linking won't load that dll again
 // taken from https://github.com/cmuratori/refterm/blob/main/refterm.c#L80

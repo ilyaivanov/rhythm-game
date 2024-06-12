@@ -10,11 +10,17 @@ typedef struct FontData
     MyBitmap textures[MAX_CHAR_CODE];
     GLuint openglTextureIds[MAX_CHAR_CODE];
 
+    // assumes monospaced font
+    i32 charWidth;
+
+    i32 charHeight;
+
     TEXTMETRIC textMetric;
 } FontData;
 
 FontData codeFont;
 FontData bigFont;
+FontData titleFont;
 
 #define TRANSPARENT_R 0x0
 #define TRANSPARENT_G 0x0
@@ -46,7 +52,6 @@ inline void CopyRectTo(MyBitmap *sourceT, MyBitmap *destination)
 
 void InitFontSystem(FontData *fontData, int fontSize, char *fontName)
 {
-
     HDC deviceContext = CreateCompatibleDC(0);
 
     int h = -MulDiv(fontSize, GetDeviceCaps(deviceContext, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
@@ -107,6 +112,9 @@ void InitFontSystem(FontData *fontData, int fontSize, char *fontName)
     }
 
     GetTextMetrics(deviceContext, &fontData->textMetric);
+
+    fontData->charHeight = fontData->textMetric.tmHeight;
+    fontData->charWidth = fontData->textures['W'].width;
     DeleteObject(bitmap);
     DeleteDC(deviceContext);
 }
@@ -135,6 +143,9 @@ void InitFonts()
     InitFontSystem(&codeFont, 14, "Consolas");
     CreateFontTexturesForOpenGl(&codeFont);
 
-    InitFontSystem(&bigFont, 30, "Consolas");
+    InitFontSystem(&bigFont, 24, "Consolas");
     CreateFontTexturesForOpenGl(&bigFont);
+
+    InitFontSystem(&titleFont, 60, "Consolas");
+    CreateFontTexturesForOpenGl(&titleFont);
 }
