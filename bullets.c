@@ -53,7 +53,7 @@ inline V2f EnemyCenter(Enemy *enemy)
 
 void Burst(V2f from, V3f color);
 
-void HandleCollisions(V2f playerPos, V2i screen)
+void HandleCollisions(V2f playerPos, V2i screen, i32 *score)
 {
     for (i32 i = 0; i < ArrayLength(bullets); i++)
     {
@@ -65,6 +65,8 @@ void HandleCollisions(V2f playerPos, V2i screen)
             {
                 enemy->isAlive = 0;
                 bullet->isAlive = 0;
+
+                *score = *score + 1;
 
                 V3f color;
                 if (enemy->type == Walker)

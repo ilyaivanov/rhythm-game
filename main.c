@@ -18,6 +18,7 @@ V2i clientAreaSize = {0};
 i32 isRunning = 1;
 i32 isFullscreen = 0;
 f32 appTime = 0;
+i32 score = 0;
 Mat4 projection;
 
 V2f playerPosition = {0};
@@ -88,6 +89,8 @@ GLuint fontVertexBuffer;
 GLuint fontVertexArray;
 GLuint fontProgram;
 
+GLint viewLocationFont;
+
 #define FLOATS_PER_VERTEX 4
 float fontVertices[] = {
     // Position      UV coords
@@ -101,6 +104,22 @@ float vertices[] = {0.0f, 0.0f,
                     1.0f, 0.0f,
                     0.0f, 1.0f,
                     1.0f, 1.0f};
+
+FontData *currentFont;
+void DrawStrBuff(StrBuff *hudLabel, f32 x, f32 y)
+{
+    float charWidth = currentFont->textures['W'].width;
+    float charHeight = currentFont->textures['W'].height;
+
+    for (i32 i = 0; i < hudLabel->size; i++)
+    {
+        Mat4 view2 = Mat4ScaleXY(Mat4TranslateV2f(Mat4Identity(), (V2f){x + i * charWidth, y}), charWidth, charHeight);
+        glUniformMatrix4fv(viewLocationFont, 1, GL_TRUE, view2.values);
+
+        glBindTexture(GL_TEXTURE_2D, currentFont->openglTextureIds[*(hudLabel->content + i)]);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(fontVertices) / FLOATS_PER_VERTEX);
+    }
+}
 
 void __stdcall WinMainCRTStartup()
 {
@@ -157,7 +176,10 @@ void __stdcall WinMainCRTStartup()
     GLint colorLocation = glGetUniformLocation(uiProgram, "color");
 
     GLint projectionLocationFont = glGetUniformLocation(fontProgram, "projection");
-    GLint viewLocationFont = glGetUniformLocation(fontProgram, "view");
+    viewLocationFont = glGetUniformLocation(fontProgram, "view");
+
+    char buffContent[200];
+    StrBuff uiLabel = {.content = buffContent, .size = 0, .capacity = 200};
 
     InitEnemies();
     InitParticles();
@@ -193,7 +215,7 @@ void __stdcall WinMainCRTStartup()
         playerPosition.x = Clamp(playerPosition.x, 0, clientAreaSize.x - playerSize);
         playerPosition.y = Clamp(playerPosition.y, 0, clientAreaSize.y - playerSize);
 
-        HandleCollisions(playerPosition, clientAreaSize);
+        HandleCollisions(playerPosition, clientAreaSize, &score);
 
         UpdateBullets(playerPosition, clientAreaSize);
         UpdateEnemies(clientAreaSize, playerPosition);
@@ -223,19 +245,36 @@ void __stdcall WinMainCRTStartup()
         glUseProgram(fontProgram);
         glBindVertexArray(fontVertexArray);
         glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
-        float charWidth = codeFont.textures['W'].width;
-        float charHeight = codeFont.textures['W'].height;
-        char ms[200];
-        i32 len = FormatNumber(GetMicrosecondsFor(Overall), ms);
-        for (i32 i = 0; i < len; i++)
-        {
 
-            Mat4 view2 = Mat4ScaleXY(Mat4TranslateV2f(Mat4Identity(), (V2f){clientAreaSize.x - (i * charWidth), 0}), charWidth, charHeight);
-            glUniformMatrix4fv(viewLocationFont, 1, GL_TRUE, view2.values);
+        currentFont = &codeFont;
+        StrBuffClear(&uiLabel);
+        StrBuffAppendStr(&uiLabel, "Overall: ");
+        StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(Overall));
+        StrBuffAppendStr(&uiLabel, "ms");
+        DrawStrBuff(&uiLabel, 0, 0);
 
-            glBindTexture(GL_TEXTURE_2D, codeFont.openglTextureIds[ms[i]]);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(fontVertices) / FLOATS_PER_VERTEX);
-        }
+        StrBuffClear(&uiLabel);
+        StrBuffAppendStr(&uiLabel, "OverallNoSwap: ");
+        StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(OverallWithoutSwap));
+        StrBuffAppendStr(&uiLabel, "ms");
+        DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight);
+
+        StrBuffClear(&uiLabel);
+        StrBuffAppendStr(&uiLabel, "Spawn: ");
+        StrBuffAppendf32(&uiLabel, enemiesPerSecond, 2);
+        StrBuffAppendStr(&uiLabel, "m/s");
+        DrawStrBuff(&uiLabel, 0, clientAreaSize.y - codeFont.textMetric.tmHeight);
+
+        StrBuffClear(&uiLabel);
+        StrBuffAppendStr(&uiLabel, "Spawned: ");
+        StrBuffAppendi32(&uiLabel, mostersSpawned);
+        DrawStrBuff(&uiLabel, 0, clientAreaSize.y - codeFont.textMetric.tmHeight * 2);
+
+        currentFont = &bigFont;
+        StrBuffClear(&uiLabel);
+        StrBuffAppendStr(&uiLabel, "Score: ");
+        StrBuffAppendi32(&uiLabel, score);
+        DrawStrBuff(&uiLabel, clientAreaSize.x / 2 - 200, clientAreaSize.y - bigFont.textMetric.tmHeight);
 
         EndMetric(OverallWithoutSwap);
         SwapBuffers(dc);

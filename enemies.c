@@ -32,7 +32,10 @@ typedef struct Enemy
 Enemy enemies[256];
 
 f32 timeToSpan = 0;
-f32 enemiesPerSecond = 2.0f;
+f32 enemiesPerSecond = 2.0f; // monters per second
+
+u32 mostersSpawned = 0;
+f32 spawnAcceleration = 0.05; // monters per second squared
 
 RandomSeries enemySeries;
 
@@ -85,6 +88,8 @@ V2f BoundaryPositionToPoint(float position, float rectWidth, float rectHeight)
 
 void SpawnEnemy(V2i clientAreaSize)
 {
+    mostersSpawned++;
+
     for (int i = 0; i < ArrayLength(enemies); i++)
     {
         Enemy *enemy = &enemies[i];
@@ -191,6 +196,8 @@ void UpdateEnemies(V2i clientAreaSize, V2f playerPos)
             }
         }
     }
+
+    enemiesPerSecond += spawnAcceleration / 1000 * 16.6666f;
 }
 
 void DrawEnemies(GLint viewLocation, GLint colorLocation, V2f screen)

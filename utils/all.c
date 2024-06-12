@@ -6,3 +6,4 @@
 #include "format.c"
 #include "random.c"
 #include "collision.c"
+#include "string.c"

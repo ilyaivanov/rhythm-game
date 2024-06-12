@@ -14,6 +14,7 @@ typedef struct FontData
 } FontData;
 
 FontData codeFont;
+FontData bigFont;
 
 #define TRANSPARENT_R 0x0
 #define TRANSPARENT_G 0x0
@@ -133,4 +134,7 @@ void InitFonts()
 {
     InitFontSystem(&codeFont, 14, "Consolas");
     CreateFontTexturesForOpenGl(&codeFont);
+
+    InitFontSystem(&bigFont, 30, "Consolas");
+    CreateFontTexturesForOpenGl(&bigFont);
 }

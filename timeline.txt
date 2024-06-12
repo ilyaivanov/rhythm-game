@@ -42,7 +42,7 @@ Backlog
 
 Random Ideas
 1. Brotato has a time-based levels, which suit me good in terms of track length. Maybe I can create a similar to brotato mechanics, but focus on music affecting enemies. 
-
+2. Slow music might be more challanging by triggering more events per rhytm. For example spawnign 20 enemies with interesting pattern on tick. 
 
 Day 1 08.06.24 Sat
 Bootstrap a project. Software renderer. Add an example of OpenGL renderer from my previous project. 
@@ -95,3 +95,7 @@ Variations in the game
 - Coherency (meaning different systems work together to progress you in the game, so that you can experience different content, like bosses, locations, levels, epic drops, etc)
 
 Each level is a different song. In order to finish it, I need to listen to song to the end and survive. 
+
+
+Day 5 12.06.24 Wed
+11:10 - 12:10 finishing with the HUD system. Drawing labels, numbers, floats on the screen. Introduced spawn acceleration and score.
