@@ -21,7 +21,10 @@ f32 appTime = 0;
 i32 score = 0;
 Mat4 projection;
 
-V2f playerPosition = {0};
+V2f playerPosition = {400, 400};
+
+u32 playerMaxHealth = 10;
+i32 playerHealth = 0;
 
 char keys[256] = {0};
 
@@ -127,7 +130,7 @@ void __stdcall WinMainCRTStartup()
 
     HINSTANCE instance = GetModuleHandle(0);
     PreventWindowsDPIScaling();
-    HWND window = OpenAppWindowWithSize(instance, OnEvent, 1800, 1000);
+    HWND window = OpenAppWindowWithSize(instance, OnEvent, 1800, 1200);
     HDC dc = GetDC(window);
 
     Win32InitOpenGL(window, dc);
@@ -183,6 +186,10 @@ void __stdcall WinMainCRTStartup()
 
     InitEnemies();
     InitParticles();
+
+    playerPosition = (V2f){clientAreaSize.x / 2 - playerSize / 2, clientAreaSize.y / 2 - playerSize / 2};
+    playerHealth = playerMaxHealth;
+
     while (isRunning)
     {
         StartMetric(Overall);
@@ -215,7 +222,7 @@ void __stdcall WinMainCRTStartup()
         playerPosition.x = Clamp(playerPosition.x, 0, clientAreaSize.x - playerSize);
         playerPosition.y = Clamp(playerPosition.y, 0, clientAreaSize.y - playerSize);
 
-        HandleCollisions(playerPosition, clientAreaSize, &score);
+        HandleCollisions(playerPosition, clientAreaSize, &score, &playerHealth);
 
         UpdateBullets(playerPosition, clientAreaSize);
         UpdateEnemies(clientAreaSize, playerPosition);
@@ -239,6 +246,16 @@ void __stdcall WinMainCRTStartup()
         DrawEnemies(viewLocation, colorLocation, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y});
         DrawBullets(viewLocation, colorLocation);
 
+        // HUD
+
+        // Player States
+        f32 maxHealthWidth = 200.0f;
+        f32 healthWidth = (f32)playerHealth / (f32)playerMaxHealth * maxHealthWidth;
+        Mat4 view3 = Mat4ScaleXY(Mat4TranslateXY(Mat4Identity(), 20, clientAreaSize.y - 20 - 40), healthWidth, 40);
+        glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view3.values);
+        glUniform4f(colorLocation, 0.2f, 0.2f, 1.0f, 1.0f);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
+
         //
         // Font stuff
         //
@@ -251,24 +268,24 @@ void __stdcall WinMainCRTStartup()
         StrBuffAppendStr(&uiLabel, "Overall: ");
         StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(Overall));
         StrBuffAppendStr(&uiLabel, "ms");
-        DrawStrBuff(&uiLabel, 0, 0);
+        DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 0);
 
         StrBuffClear(&uiLabel);
         StrBuffAppendStr(&uiLabel, "OverallNoSwap: ");
         StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(OverallWithoutSwap));
         StrBuffAppendStr(&uiLabel, "ms");
-        DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight);
+        DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 1);
 
         StrBuffClear(&uiLabel);
         StrBuffAppendStr(&uiLabel, "Spawn: ");
         StrBuffAppendf32(&uiLabel, enemiesPerSecond, 2);
         StrBuffAppendStr(&uiLabel, "m/s");
-        DrawStrBuff(&uiLabel, 0, clientAreaSize.y - codeFont.textMetric.tmHeight);
+        DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 3);
 
         StrBuffClear(&uiLabel);
         StrBuffAppendStr(&uiLabel, "Spawned: ");
         StrBuffAppendi32(&uiLabel, mostersSpawned);
-        DrawStrBuff(&uiLabel, 0, clientAreaSize.y - codeFont.textMetric.tmHeight * 2);
+        DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 4);
 
         currentFont = &bigFont;
         StrBuffClear(&uiLabel);

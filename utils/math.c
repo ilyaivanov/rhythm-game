@@ -114,6 +114,13 @@ inline Mat4 Mat4TranslateV2f(Mat4 mat, V2f v)
     return mat;
 }
 
+inline Mat4 Mat4TranslateXY(Mat4 mat, f32 x, f32 y)
+{
+    mat.values[3 + 0 * 4] += x;
+    mat.values[3 + 1 * 4] += y;
+    return mat;
+}
+
 inline Mat4 Mat4Scale1f(Mat4 mat, float v)
 {
     mat.values[0 + 0 * 4] *= v;

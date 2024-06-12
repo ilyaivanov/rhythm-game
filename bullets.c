@@ -53,7 +53,7 @@ inline V2f EnemyCenter(Enemy *enemy)
 
 void Burst(V2f from, V3f color);
 
-void HandleCollisions(V2f playerPos, V2i screen, i32 *score)
+void HandleCollisions(V2f playerPos, V2i screen, i32 *score, i32 *health)
 {
     for (i32 i = 0; i < ArrayLength(bullets); i++)
     {
@@ -82,12 +82,24 @@ void HandleCollisions(V2f playerPos, V2i screen, i32 *score)
 
         if (bullet->type == EnemyBullet && CheckTwoSquareOverlap(bullet->pos, bullet->size, playerPos, playerSize))
         {
+            // Bullet hit on Player
             bullet->isAlive = 0;
-            // Hit on Player
+            *health = *health - 1;
         }
 
         if (!IsPointInsideRect((V2f){0, 0}, (V2f){(f32)screen.x, (f32)screen.y}, bullet->pos))
             bullet->isAlive = 0;
+    }
+
+    for (i32 j = 0; j < ArrayLength(enemies); j++)
+    {
+        Enemy *enemy = &enemies[j];
+        if (enemy->isAlive && CheckTwoSquareOverlap(enemy->pos, enemySize, playerPos, playerSize))
+        {
+            // Enemy hit on Player
+            enemy->isAlive = 0;
+            *health = *health - 1;
+        }
     }
 }
 
