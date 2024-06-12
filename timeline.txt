@@ -38,6 +38,7 @@ Backlog
 2. Better player controls
 3. Steering behaviour for chasing enemies. Consider Brotato as a good example, where enemies follow you ,but do not join into the exact same postion on the screen. 
 4. Check Nova Drif as an example how they handle different screen resolutions 
+5. Drawing font (monospaced Consolas) via OpenGL
 
 Random Ideas
 1. Brotato has a time-based levels, which suit me good in terms of track length. Maybe I can create a similar to brotato mechanics, but focus on music affecting enemies. 
@@ -51,11 +52,21 @@ Start writing game logic - player movement, enemy movement and spawning, fire bu
 
 Day 3 10.06.24 Mon
 Plan: different types of enemies, better collision. 
-8:40 - 8:50 writing this document
-9:20 - 9:40 better rect collision
-9:40 - 10:20 working on a Wall Walker enemy type    
-11:00 - 11:10working on this document
+08:40 - 08:50 writing this document
+09:20 - 09:40 better rect collision
+09:40 - 10:20 working on a Wall Walker enemy type    
+11:00 - 11:10 working on this document
+12:10 - 12:15 random float one to zero 
+12:40 - 13:10 random enemy speed. Walker firing at you
+13:35 - 13:45 Particle Effect (start)
+14:30 - 15:20 Particle Effect - explosions on enemy hit
+17:30 - 17:50 Font rendering via OpenGL (start)
 
+
+
+Day 4 11.06.24 Tue
+10:30 - 11:30 working on undestanding how I draw textures via OpenGL by breaking down yafe2 project
+ finished font support. Working on drawing label with numbers on the screen
 
 Steps to 0.1v
     - Finish with fonts

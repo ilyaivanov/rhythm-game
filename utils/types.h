@@ -38,3 +38,10 @@ typedef struct MyBitmap
     }
 
 #define Fail(msg) Assert(0)
+
+// Game specific types, which shouldn't be placed here
+typedef enum BulletType
+{
+    PlayerBullet,
+    EnemyBullet
+} BulletType;

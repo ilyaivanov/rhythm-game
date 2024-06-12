@@ -5,6 +5,7 @@
 
 // taken from 457 day codebase of handmade hero
 
+#define U32Max ((u32) - 1)
 typedef struct f32_4x
 {
     union
@@ -81,4 +82,23 @@ inline u32 RandomNextU32(RandomSeries *Series)
 inline u32 RandomChoice(RandomSeries *Series, u32 ChoiceCount)
 {
     return RandomNextU32(Series) % ChoiceCount;
+}
+
+inline f32 RandomF32Normal(RandomSeries *series)
+{
+    f32 Divisor = 1.0f / (f32)U32Max;
+    return Divisor * (f32)RandomNextU32(series);
+}
+
+inline f32 RandomF32(RandomSeries *series, f32 min, f32 max)
+{
+    return min + RandomF32Normal(series) * (max - min);
+}
+
+inline V2f RandomUnitVector(RandomSeries *series)
+{
+    float rad = RandomF32(series, 0.0f, 2 * E_PI);
+    V2f res;
+    SinCos(rad, &res.y, &res.x);
+    return res;
 }
