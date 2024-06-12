@@ -4,8 +4,9 @@
 // #include <math.h>
 #include <gl/gl.h>
 
-#include "utils/all.c"
 #include "win32.c"
+#include "utils/all.c"
+#include "utils/font.c"
 #include "constants.c"
 #include "bullets.c"
 #include "enemies.c"
@@ -15,7 +16,7 @@
 
 V2i clientAreaSize = {0};
 i32 isRunning = 1;
-i32 isFullscreen = 1;
+i32 isFullscreen = 0;
 f32 appTime = 0;
 Mat4 projection;
 
@@ -83,6 +84,18 @@ GLuint uiProgram;
 GLuint vertexBuffer;
 GLuint vertexArray;
 
+GLuint fontVertexBuffer;
+GLuint fontVertexArray;
+GLuint fontProgram;
+
+#define FLOATS_PER_VERTEX 4
+float fontVertices[] = {
+    // Position      UV coords
+    1.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 1.0f,
+    0.0f, 1.0f, 0.0f, 1.0f};
+
 #define POINTS_PER_VERTEX 2
 float vertices[] = {0.0f, 0.0f,
                     1.0f, 0.0f,
@@ -100,11 +113,13 @@ void __stdcall WinMainCRTStartup()
 
     Win32InitOpenGL(window, dc);
     InitGlFunctions();
+    InitFonts();
 
     if (isFullscreen)
         SetFullscreen(window, isFullscreen);
 
     uiProgram = CreateProgram("..\\shaders\\primitives.vs", "..\\shaders\\primitives.fs");
+    fontProgram = CreateProgram("..\\shaders\\font.vs", "..\\shaders\\font.fs");
 
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -117,14 +132,32 @@ void __stdcall WinMainCRTStartup()
     glVertexAttribPointer(0, POINTS_PER_VERTEX, GL_FLOAT, GL_FALSE, stride, (void *)0);
     glEnableVertexAttribArray(0);
 
+    //
+    // Font
+    //
+    glGenBuffers(1, &fontVertexBuffer);
+    glGenVertexArrays(1, &fontVertexArray);
+
+    glBindBuffer(GL_ARRAY_BUFFER, fontVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(fontVertices), fontVertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(fontVertexArray);
+    size_t strideFont = FLOATS_PER_VERTEX * sizeof(float);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, strideFont, (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, strideFont, (void *)0);
+    glEnableVertexAttribArray(1);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glUseProgram(uiProgram);
 
     GLint projectionLocation = glGetUniformLocation(uiProgram, "projection");
     GLint viewLocation = glGetUniformLocation(uiProgram, "view");
     GLint colorLocation = glGetUniformLocation(uiProgram, "color");
+
+    GLint projectionLocationFont = glGetUniformLocation(fontProgram, "projection");
+    GLint viewLocationFont = glGetUniformLocation(fontProgram, "view");
 
     InitEnemies();
     InitParticles();
@@ -170,6 +203,7 @@ void __stdcall WinMainCRTStartup()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glUseProgram(uiProgram);
         glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
         glUniform4f(colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -182,6 +216,26 @@ void __stdcall WinMainCRTStartup()
         DrawParticles(viewLocation, colorLocation);
         DrawEnemies(viewLocation, colorLocation, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y});
         DrawBullets(viewLocation, colorLocation);
+
+        //
+        // Font stuff
+        //
+        glUseProgram(fontProgram);
+        glBindVertexArray(fontVertexArray);
+        glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
+        float charWidth = codeFont.textures['W'].width;
+        float charHeight = codeFont.textures['W'].height;
+        char ms[200];
+        i32 len = FormatNumber(GetMicrosecondsFor(Overall), ms);
+        for (i32 i = 0; i < len; i++)
+        {
+
+            Mat4 view2 = Mat4ScaleXY(Mat4TranslateV2f(Mat4Identity(), (V2f){clientAreaSize.x - (i * charWidth), 0}), charWidth, charHeight);
+            glUniformMatrix4fv(viewLocationFont, 1, GL_TRUE, view2.values);
+
+            glBindTexture(GL_TEXTURE_2D, codeFont.openglTextureIds[ms[i]]);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(fontVertices) / FLOATS_PER_VERTEX);
+        }
 
         EndMetric(OverallWithoutSwap);
         SwapBuffers(dc);

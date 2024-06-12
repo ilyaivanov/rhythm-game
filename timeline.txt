@@ -45,3 +45,10 @@ Plan: different types of enemies, better collision.
 12:40 - 13:10 random enemy speed. Walker firing at you
 13:35 - 13:45 Particle Effect (start)
 14:30 - 15:20 Particle Effect - explosions on enemy hit
+17:30 - 17:50 Font rendering via OpenGL (start)
+
+
+
+Day 4 11.06.24 Tue
+10:30 - 11:30 working on undestanding how I draw textures via OpenGL by breaking down yafe2 project
+ finished font support. Working on drawing label with numbers on the screen

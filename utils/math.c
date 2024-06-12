@@ -138,6 +138,13 @@ inline Mat4 Mat4ScaleUniform(Mat4 mat, f32 scalar)
     return mat;
 }
 
+inline Mat4 Mat4ScaleXY(Mat4 mat, f32 x, f32 y)
+{
+    mat.values[0 + 0 * 4] *= x;
+    mat.values[1 + 1 * 4] *= y;
+    return mat;
+}
+
 inline Mat4 Mat4Identity()
 {
     // clang-format off
