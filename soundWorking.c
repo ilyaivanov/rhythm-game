@@ -2,34 +2,28 @@
 #include "utils\all.c"
 #include <dsound.h>
 
-#define _USE_MATH_DEFINES
-#include "math.h"
-
 typedef DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
 DirectSoundCreateType *soundCreate;
 // extern _Check_return_ HRESULT WINAPI DirectSoundCreate(_In_opt_ LPCGUID pcGuidDevice, _Outptr_ LPDIRECTSOUND *ppDS, _Pre_null_ LPUNKNOWN pUnkOuter);
 
 LPDIRECTSOUNDBUFFER soundBuffer;
-
 i32 samplesPerSecond = 48000;
-i32 toneHz = 256;
 i16 toneVolume = 3000;
-
-u32 runningSampleIndex = 0;
-DWORD bufferSize;
-f32 wavePeriod;
+i32 toneHz = 256;
+u32 runningSampleIndex;
+i32 wavePeriod;
 i32 bytesPerSample;
-
+i32 bufferSize;
 f32 tSine;
 i32 latencySampleCount;
 
 void InitSound(HWND window)
 {
-    wavePeriod = (f32)samplesPerSecond / (f32)toneHz;
+    // TODO(casey): Make this like sixty seconds?
+    wavePeriod = samplesPerSecond / toneHz;
     bytesPerSample = sizeof(i16) * 2;
     bufferSize = samplesPerSecond * bytesPerSample;
-
     latencySampleCount = samplesPerSecond / 15;
 
     // Load library
@@ -75,7 +69,6 @@ void InitSound(HWND window)
             BufferDescription.dwFlags = 0;
             BufferDescription.dwBufferBytes = bufferSize;
             BufferDescription.lpwfxFormat = &WaveFormat;
-
             HRESULT Error = sound->lpVtbl->CreateSoundBuffer(sound, &BufferDescription, &soundBuffer, 0);
             if (SUCCEEDED(Error))
             {
@@ -91,19 +84,14 @@ void FillSoundRegion(void *region, DWORD size)
     i16 *SampleOut = (i16 *)region;
     for (DWORD i = 0; i < Region1SampleCount; ++i)
     {
-        f32 SineValue = sinf(tSine);
-        // f32 CosValue;
-        // SinCos(tSine, &SineValue, &CosValue);
+        f32 SineValue;
+        f32 CosValue;
+        SinCos(tSine, &SineValue, &CosValue);
         i16 SampleValue = (i16)(SineValue * toneVolume);
         *SampleOut++ = SampleValue;
         *SampleOut++ = SampleValue;
 
-        soundSamples[currentPosition++] = SampleValue;
-
-        if (currentPosition >= SAMPLES_TO_SHOW)
-            currentPosition = 0;
-
-        tSine += 2.0f * M_PI * 1.0f / wavePeriod;
+        tSine += 2.0f * E_PI * 1.0f / (f32)wavePeriod;
         ++runningSampleIndex;
     }
 }
@@ -126,11 +114,9 @@ void FillSoundBuffer(DWORD ByteToLock, DWORD BytesToWrite)
     }
 }
 
-void FirstFillSoundAndPlay()
+void FirstFillSound()
 {
     FillSoundBuffer(0, latencySampleCount * bytesPerSample);
-
-    soundBuffer->lpVtbl->Play(soundBuffer, 0, 0, DSBPLAY_LOOPING);
 }
 
 void WriteSound()
