@@ -72,19 +72,31 @@ Day 4 11.06.24 Tue
  finished font support. Working on drawing label with numbers on the screen
 
 Steps to 0.1v
-    - Finish with fonts
-    - Show score (monsters killed for now) and spawn rate
-    - Gradualy increase spawn rate, monster average speed, monster types to spawn. Add chances to spawn several monsters at the same time. 
-    - Automatically shot every 3 bullets per second
-    - Add 3 health points. Add immunity for 2 seconds after hit. 
-    - Add 3 game states. Start, game and end.
-    ? I have difficulty increasing, I don't have any means to increase power of the player. 
-    - Powerups
+    ▲ Finish with fonts
+    ▲ Show score (monsters killed for now) and spawn rate
+    ▲ Gradualy increase (just spawn rate for now is ok)
+        ▲ spawn rate
+        x monster average speed
+        x monster types to spawn. 
+        x Add chances to spawn several monsters at the same time. 
+    ▼ Automatically shot every 3 bullets per second
+    ▲ Add 3 health points. Add immunity for 2 seconds after hit. 
+    ▲ Add 3 game states. Start, game and end.
+    ? I have difficulty designing player power increase, I don't have any means to increase power of the player. 
+    ▼ Powerups
        - For now increase rate of fire each 10 kills. New bullet on 50 kills. 
        - Or monsters can drop permanent boosts, like fire rate, bullet count
-    - Add small imprecision to player shots. 
-    - Add player speed to bullets speed.  
+    ▼ Add small imprecision to player shots. 
+    ▼ Add player speed to bullets speed.  
 *** At this stage I have a minimal playable game with set of parameters to change ***
+
+Steps to 0.2v
+    - Finish handmade section on sounds (4 parts)
+    - Add simple sounds to the game
+    - Pick a minimal track (2-3 mins)
+    - Start denoting simple beats of that track
+
+
 
 Variations in the game
 - Monster types and their variations
@@ -102,4 +114,9 @@ Each level is a different song. In order to finish it, I need to listen to song 
 
 Day 5 12.06.24 Wed
 11:10 - 12:10 finishing with the HUD system. Drawing labels, numbers, floats on the screen. Introduced spawn acceleration and score.
-13:50 - Player hitpoints drawn as a bar.
+13:50 - 14:40 player hitpoints drawn as a bar. Three game states: start, game and end. 
+15:25 - 16:10 starting working on a audio. Watching episode 7 HMH on audio
+
+
+Day 6 13.06.24 Thu
+11:20 continue watching episode 8 and working on audio

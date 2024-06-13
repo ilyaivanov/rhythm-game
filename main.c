@@ -11,6 +11,7 @@
 #include "bullets.c"
 #include "enemies.c"
 #include "particles.c"
+#include "sound.c"
 
 #define ONE_OVER_SQUARE_ROOT_OF_TWO 0.70710678118f
 
@@ -168,6 +169,10 @@ void __stdcall WinMainCRTStartup()
     Win32InitOpenGL(window, dc);
     InitGlFunctions();
     InitFonts();
+    InitSound(window);
+
+    FillSoundBuffer(0, latencySampleCount * bytesPerSample);
+    soundBuffer->lpVtbl->Play(soundBuffer, 0, 0, DSBPLAY_LOOPING);
 
     if (isFullscreen)
         SetFullscreen(window, isFullscreen);
@@ -242,6 +247,8 @@ void __stdcall WinMainCRTStartup()
                 break;
             }
         }
+
+        WriteSound();
 
         if (gameState == GameStart)
         {
