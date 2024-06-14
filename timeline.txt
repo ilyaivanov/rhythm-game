@@ -119,4 +119,4 @@ Day 5 12.06.24 Wed
 
 
 Day 6 13.06.24 Thu
-11:20 continue watching episode 8 and working on audio
+11:20 17:30 (with huge breaks) watching episode 8,9 and working on audio. Debugging why 256 Hz is not stable for f32. Visualize audio samples using OpenGL. 

@@ -1,8 +1,7 @@
-#include <xmmintrin.h>
-
 // sin cos taken from https://guide.handmadehero.org/code/day440
 #define R32_EPSILON 1.19209290e-7f
 #define E_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062f
+#define E_PI_D 3.1415926535897932384626433832795028841971693993751058209749445923078164062
 
 float XSinCosX[][3] = {
     {-3.00001740e+00f, -1.41102776e-01f, -9.89994943e-01f},
@@ -58,36 +57,4 @@ void SinCos(float x, float *sinX, float *cosX)
 
     *sinX = xd2 * (CosIXd * SinXdS3S7 + sin_i * CosXdC2C6) + sin_i * C0 + CosIXd * S1;
     *cosX = xd2 * (cos_i * CosXdC2C6 - SinIXd * SinXdS3S7) - SinIXd * S1 + cos_i * C0;
-}
-
-float mysinf(float x)
-{
-    float cos = 0.0f;
-    float sin = 0.0f;
-    SinCos(x, &sin, &cos);
-    return sin;
-}
-
-float mycosf(float x)
-{
-    float cos = 0.0f;
-    float sin = 0.0f;
-    SinCos(x, &sin, &cos);
-    return cos;
-}
-
-float mytanf(float x)
-{
-    float cos = 0.0f;
-    float sin = 0.0f;
-    SinCos(x, &sin, &cos);
-    return sin / cos;
-}
-
-inline float mysqrtf(float x)
-{
-    float result;
-    _mm_store_ss(&result, _mm_sqrt_ss(_mm_set_ss(x)));
-
-    return result;
 }

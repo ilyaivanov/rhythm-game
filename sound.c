@@ -1,9 +1,7 @@
 #pragma once
 #include "utils\all.c"
 #include <dsound.h>
-
-#define _USE_MATH_DEFINES
-#include "math.h"
+#include <math.h>
 
 typedef DirectSoundCreateType(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 
@@ -18,15 +16,15 @@ i16 toneVolume = 3000;
 
 u32 runningSampleIndex = 0;
 DWORD bufferSize;
-f32 wavePeriod;
+f64 wavePeriod;
 i32 bytesPerSample;
 
-f32 tSine;
+f64 tSine;
 i32 latencySampleCount;
 
 void InitSound(HWND window)
 {
-    wavePeriod = (f32)samplesPerSecond / (f32)toneHz;
+
     bytesPerSample = sizeof(i16) * 2;
     bufferSize = samplesPerSecond * bytesPerSample;
 
@@ -85,55 +83,60 @@ void InitSound(HWND window)
     }
 }
 
-void FillSoundRegion(void *region, DWORD size)
+void FillSoundRegion(void *region, DWORD size, f64 toneHz)
 {
-    DWORD Region1SampleCount = size / bytesPerSample;
-    i16 *SampleOut = (i16 *)region;
-    for (DWORD i = 0; i < Region1SampleCount; ++i)
+    f64 wavePeriod = (f64)samplesPerSecond / toneHz;
+    DWORD samplesCount = size / bytesPerSample;
+    i16 *out = (i16 *)region;
+    f64 step = 2.0 * E_PI * 1.0 / wavePeriod;
+    for (DWORD i = 0; i < samplesCount; ++i)
     {
-        f32 SineValue = sinf(tSine);
-        // f32 CosValue;
-        // SinCos(tSine, &SineValue, &CosValue);
-        i16 SampleValue = (i16)(SineValue * toneVolume);
-        *SampleOut++ = SampleValue;
-        *SampleOut++ = SampleValue;
+        // f64 sineValue = sin(tSine);
+        // f64 sineValue;
+        // f64 cosValue;
+        // SinCos(tSine, &sineValue, &cosValue);
+        // i16 val = (i16)(sineValue * toneVolume);
+        u16 left = samplesToPlay[currentSample++];
+        *out++ = left;
+        *out++ = samplesToPlay[currentSample++];
 
-        soundSamples[currentPosition++] = SampleValue;
+        soundSamples[currentPosition++] = left;
 
         if (currentPosition >= SAMPLES_TO_SHOW)
             currentPosition = 0;
 
-        tSine += 2.0f * M_PI * 1.0f / wavePeriod;
+        tSine += step;
         ++runningSampleIndex;
     }
 }
 
-void FillSoundBuffer(DWORD ByteToLock, DWORD BytesToWrite)
+void FillSoundBuffer(DWORD ByteToLock, DWORD BytesToWrite, f64 toneHz)
 {
-    VOID *Region1;
-    DWORD Region1Size;
-    VOID *Region2;
-    DWORD Region2Size;
+    VOID *region1;
+    DWORD region1Size;
+    VOID *region2;
+    DWORD region2Size;
     if (SUCCEEDED(soundBuffer->lpVtbl->Lock(soundBuffer, ByteToLock, BytesToWrite,
-                                            &Region1, &Region1Size,
-                                            &Region2, &Region2Size,
+                                            &region1, &region1Size,
+                                            &region2, &region2Size,
                                             0)))
     {
-        FillSoundRegion(Region1, Region1Size);
-        FillSoundRegion(Region2, Region2Size);
 
-        soundBuffer->lpVtbl->Unlock(soundBuffer, Region1, Region1Size, Region2, Region2Size);
+        FillSoundRegion(region1, region1Size, toneHz);
+        FillSoundRegion(region2, region2Size, toneHz);
+
+        soundBuffer->lpVtbl->Unlock(soundBuffer, region1, region1Size, region2, region2Size);
     }
 }
 
-void FirstFillSoundAndPlay()
+void FirstFillSoundAndPlay(f64 tone)
 {
-    FillSoundBuffer(0, latencySampleCount * bytesPerSample);
+    FillSoundBuffer(0, latencySampleCount * bytesPerSample, tone);
 
     soundBuffer->lpVtbl->Play(soundBuffer, 0, 0, DSBPLAY_LOOPING);
 }
 
-void WriteSound()
+void WriteSound(f64 toneHz)
 {
     // NOTE(casey): DirectSound output test
     DWORD PlayCursor;
@@ -156,6 +159,6 @@ void WriteSound()
             BytesToWrite = TargetCursor - ByteToLock;
         }
 
-        FillSoundBuffer(ByteToLock, BytesToWrite);
+        FillSoundBuffer(ByteToLock, BytesToWrite, toneHz);
     }
 }

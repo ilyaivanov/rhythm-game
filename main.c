@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <windowsx.h> // this is used for GET_X_PARAM and GET_Y_PARAM
 // #include <stdio.h>
-// #include <math.h>
 #include <gl/gl.h>
 
 #include "win32.c"
@@ -15,6 +14,10 @@
 #define SAMPLES_TO_SHOW 48000
 i32 currentPosition;
 i16 soundSamples[SAMPLES_TO_SHOW];
+
+u32 samplesToPlayCount;
+u32 currentSample;
+u16 *samplesToPlay;
 
 #include "sound.c"
 
@@ -42,6 +45,8 @@ u32 playerMaxHealth = 5;
 i32 playerHealth = 0;
 
 char keys[256] = {0};
+
+f64 hz = 256.0;
 
 void OnResize()
 {
@@ -72,6 +77,9 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_KEYDOWN)
     {
+        if (wParam == VK_SPACE)
+            toneHz = 312.0f;
+
         if (wParam == VK_SPACE && (gameState == GameStart || gameState == GameEnd))
         {
             StartGame();
@@ -90,6 +98,9 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_KEYUP)
     {
+        if (wParam == VK_SPACE)
+            toneHz = 256.0f;
+
         if (wParam < 256)
             keys[wParam] = 0;
         // if (wParam == VK_SPACE)
@@ -235,9 +246,52 @@ void DisplaySoundWave()
     glBindVertexArray(fontVertexArray);
 
     StrBuffClear(&uiLabel);
-    StrBuffAppendf32(&uiLabel, samplesPerSecond / averagePeakDistance, 3);
+    f32 givenHz = samplesPerSecond / averagePeakDistance;
+    StrBuffAppendf32(&uiLabel, givenHz, 3);
     currentFont = &codeFont;
     DrawStrBuff(&uiLabel, 0, 0);
+}
+
+#pragma pack(push)
+typedef struct WavRiff
+{
+    u32 id;
+    u32 size;
+    u32 wave;
+} WavRiff;
+
+// comments taken from http://soundfile.sapp.org/doc/WaveFormat/
+typedef struct WavHeader
+{
+    u32 id;            // Contains the letters "fmt " (0x666d7420 big-endian form).
+    u32 size;          // 16 for PCM.  This is the size of the rest of the Subchunk which follows this number.
+    u16 format;        // PCM = 1 (i.e. Linear quantization) Values other than 1 indicate some form of compression.
+    u16 numChannels;   // Mono = 1, Stereo = 2, etc.
+    u32 sampleRate;    // 8000, 44100, etc.
+    u32 byteRate;      // == SampleRate * NumChannels * BitsPerSample/8
+    u16 blockAlign;    // == NumChannels * BitsPerSample/8 The number of bytes for one sample including all channels.
+    u16 bitsPerSample; // 8 bits = 8, 16 bits = 16, etc.
+} WavHeader;
+
+typedef struct WavData
+{
+    u32 id;
+    u32 size;
+    u8 data[];
+} WavData;
+#pragma pack(pop)
+
+void ReadSound()
+{
+
+    FileContent file = ReadMyFileImp("..\\assets\\music_test.wav");
+
+    WavRiff *riff = (WavRiff *)file.content;
+    WavHeader *header = (WavHeader *)(riff + 1);
+    WavData *data = (WavData *)(header + 1);
+
+    samplesToPlayCount = data->size;
+    samplesToPlay = (u16 *)data->data;
 }
 
 int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
@@ -253,8 +307,11 @@ int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nC
     Win32InitOpenGL(window, dc);
     InitGlFunctions();
     InitFonts();
+
+    ReadSound();
+
     InitSound(window);
-    FirstFillSoundAndPlay();
+    FirstFillSoundAndPlay(toneHz);
 
     if (isFullscreen)
         SetFullscreen(window, isFullscreen);
@@ -320,7 +377,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nC
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        WriteSound();
+        WriteSound(toneHz);
 
         DisplaySoundWave();
 
