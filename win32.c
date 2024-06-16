@@ -9,7 +9,7 @@
 #include "gl/glFlags.h"
 #include "gl/glFunctions.c"
 
-// int _fltused = 0x9875;
+int _fltused = 0x9875;
 #define VirtualAllocateMemory(size) (VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE))
 #define VirtualFreeMemory(ptr) (VirtualFree(ptr, 0, MEM_RELEASE))
 
@@ -67,16 +67,16 @@ HWND OpenAppWindowWithSize(HINSTANCE instance, WNDPROC OnEvent, int windowWidth,
 }
 
 // Increasing Read Bandwidth with SIMD Instructions https://www.computerenhance.com/p/increasing-read-bandwidth-with-simd
-// #pragma function(memset)
-// void *memset(void *dest, int c, size_t count)
-// {
-//     char *bytes = (char *)dest;
-//     while (count--)
-//     {
-//         *bytes++ = (char)c;
-//     }
-//     return dest;
-// }
+#pragma function(memset)
+void *memset(void *dest, int c, size_t count)
+{
+    char *bytes = (char *)dest;
+    while (count--)
+    {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
 
 // DPI Scaling
 // user32.dll is linked statically, so dynamic linking won't load that dll again

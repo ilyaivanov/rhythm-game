@@ -152,6 +152,20 @@ inline Mat4 Mat4ScaleXY(Mat4 mat, f32 x, f32 y)
     return mat;
 }
 
+inline Mat4 Mat4RotateZ(Mat4 mat, f32 rads)
+{
+    f32 sin;
+    f32 cos;
+    SinCos(rads, &sin, &cos);
+
+    mat.values[0 + 0 * 4] *= cos;
+    // mat.values[0 + 1 * 4] *= -sin;
+    // mat.values[1 + 0 * 4] *= sin;
+    // mat.values[1 + 1 * 4] *= cos;
+
+    return mat;
+}
+
 inline Mat4 Mat4Identity()
 {
     // clang-format off

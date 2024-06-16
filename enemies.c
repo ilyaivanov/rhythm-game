@@ -2,6 +2,7 @@
 #include "utils/all.c"
 #include <gl/gl.h>
 #include "constants.c"
+#include "events.c"
 
 typedef enum EnemyType
 {
@@ -99,12 +100,12 @@ void SpawnEnemy(V2i clientAreaSize)
             enemy->isAlive = 1;
 
             i32 typeChoise = RandomEnemyChoice(10);
-            if (typeChoise < 2)
-                enemy->type = Chaser;
-            else if (typeChoise < 3)
-                enemy->type = WallShooter;
-            else
-                enemy->type = Walker;
+            // if (typeChoise < 2)
+            //     enemy->type = Chaser;
+            // else if (typeChoise < 3)
+            //     enemy->type = WallShooter;
+            // else
+            enemy->type = Walker;
 
             enemy->speed = RandomF32(&enemySeries, minEnemySpeed, maxEnemySpeed);
 
@@ -123,22 +124,22 @@ void SpawnEnemy(V2i clientAreaSize)
                 {
                 // up
                 case 0:
-                    enemy->pos = (V2f){randomX, clientAreaSize.y};
+                    enemy->pos = (V2f){randomX, clientAreaSize.y - enemySize};
                     enemy->direction = (V2f){0.0f, -1.0f};
                     break;
                 // down
                 case 1:
-                    enemy->pos = (V2f){randomX, -enemySize};
+                    enemy->pos = (V2f){randomX, 0};
                     enemy->direction = (V2f){0.0f, 1.0f};
                     break;
                 // left
                 case 2:
-                    enemy->pos = (V2f){-enemySize, randomY};
+                    enemy->pos = (V2f){0, randomY};
                     enemy->direction = (V2f){1.0f, 0.0f};
                     break;
                 // right
                 case 3:
-                    enemy->pos = (V2f){clientAreaSize.x, randomY};
+                    enemy->pos = (V2f){clientAreaSize.x - enemySize, randomY};
                     enemy->direction = (V2f){-1.0f, 0.0f};
                     break;
                 }
@@ -150,12 +151,12 @@ void SpawnEnemy(V2i clientAreaSize)
 }
 
 void Fire(V2f from, V2f to, BulletType type, f32 speed, f32 size);
-void UpdateEnemies(V2i clientAreaSize, V2f playerPos)
+void UpdateEnemies(V2i clientAreaSize, V2f playerPos, f32 timeSec)
 {
-    timeToSpan -= 16.666f;
-    if (timeToSpan < 0)
+    if (events[nextEvent].at - 0.01 <= timeSec)
     {
-        timeToSpan = (1000.0f / enemiesPerSecond) + timeToSpan;
+        nextEvent++;
+        // timeToSpan = (1000.0f / enemiesPerSecond) + timeToSpan;
         SpawnEnemy(clientAreaSize);
     }
 

@@ -22,20 +22,21 @@ u32 GetMicrosecondsFor(PerfMetric metric)
     return perfsMicroseconds[metric];
 }
 
+inline u64 GetPerfCounter()
+{
+    LARGE_INTEGER end;
+    QueryPerformanceCounter(&end);
+    return end.QuadPart;
+}
+
 void StartMetric(PerfMetric metric)
 {
-    LARGE_INTEGER start = {0};
-    QueryPerformanceCounter(&start);
-    starts[metric] = start.QuadPart;
+    starts[metric] = GetPerfCounter();
 }
 
 void EndMetric(PerfMetric metric)
 {
-    LARGE_INTEGER end = {0};
-    QueryPerformanceCounter(&end);
-    // ends[metric] = end.QuadPart;
-    perfsMicroseconds[metric] = (u32)((f32)((end.QuadPart - starts[metric]) * 1000 * 1000) / (f32)frequency);
-    // return GetMicrosecondsFor(metric);
+    perfsMicroseconds[metric] = (u32)((f32)((GetPerfCounter() - starts[metric]) * 1000 * 1000) / (f32)frequency);
 }
 
 void InitPerf()

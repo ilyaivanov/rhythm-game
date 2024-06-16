@@ -10,21 +10,14 @@ DirectSoundCreateType *soundCreate;
 
 LPDIRECTSOUNDBUFFER soundBuffer;
 
-i32 samplesPerSecond = 48000;
-i32 toneHz = 256;
-i16 toneVolume = 3000;
-
 u32 runningSampleIndex = 0;
+i32 samplesPerSecond = 44100;
 DWORD bufferSize;
-f64 wavePeriod;
 i32 bytesPerSample;
-
-f64 tSine;
 i32 latencySampleCount;
 
 void InitSound(HWND window)
 {
-
     bytesPerSample = sizeof(i16) * 2;
     bufferSize = samplesPerSecond * bytesPerSample;
 
@@ -83,19 +76,12 @@ void InitSound(HWND window)
     }
 }
 
-void FillSoundRegion(void *region, DWORD size, f64 toneHz)
+void FillSoundRegion(void *region, DWORD size)
 {
-    f64 wavePeriod = (f64)samplesPerSecond / toneHz;
     DWORD samplesCount = size / bytesPerSample;
     i16 *out = (i16 *)region;
-    f64 step = 2.0 * E_PI * 1.0 / wavePeriod;
     for (DWORD i = 0; i < samplesCount; ++i)
     {
-        // f64 sineValue = sin(tSine);
-        // f64 sineValue;
-        // f64 cosValue;
-        // SinCos(tSine, &sineValue, &cosValue);
-        // i16 val = (i16)(sineValue * toneVolume);
         u16 left = samplesToPlay[currentSample++];
         *out++ = left;
         *out++ = samplesToPlay[currentSample++];
@@ -105,12 +91,11 @@ void FillSoundRegion(void *region, DWORD size, f64 toneHz)
         if (currentPosition >= SAMPLES_TO_SHOW)
             currentPosition = 0;
 
-        tSine += step;
-        ++runningSampleIndex;
+        runningSampleIndex++;
     }
 }
 
-void FillSoundBuffer(DWORD ByteToLock, DWORD BytesToWrite, f64 toneHz)
+void FillSoundBuffer(DWORD ByteToLock, DWORD BytesToWrite)
 {
     VOID *region1;
     DWORD region1Size;
@@ -122,21 +107,21 @@ void FillSoundBuffer(DWORD ByteToLock, DWORD BytesToWrite, f64 toneHz)
                                             0)))
     {
 
-        FillSoundRegion(region1, region1Size, toneHz);
-        FillSoundRegion(region2, region2Size, toneHz);
+        FillSoundRegion(region1, region1Size);
+        FillSoundRegion(region2, region2Size);
 
         soundBuffer->lpVtbl->Unlock(soundBuffer, region1, region1Size, region2, region2Size);
     }
 }
 
-void FirstFillSoundAndPlay(f64 tone)
+void FirstFillSoundAndPlay()
 {
-    FillSoundBuffer(0, latencySampleCount * bytesPerSample, tone);
+    FillSoundBuffer(0, latencySampleCount * bytesPerSample);
 
     soundBuffer->lpVtbl->Play(soundBuffer, 0, 0, DSBPLAY_LOOPING);
 }
 
-void WriteSound(f64 toneHz)
+void WriteSound()
 {
     // NOTE(casey): DirectSound output test
     DWORD PlayCursor;
@@ -159,6 +144,6 @@ void WriteSound(f64 toneHz)
             BytesToWrite = TargetCursor - ByteToLock;
         }
 
-        FillSoundBuffer(ByteToLock, BytesToWrite, toneHz);
+        FillSoundBuffer(ByteToLock, BytesToWrite);
     }
 }

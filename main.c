@@ -11,7 +11,7 @@
 #include "enemies.c"
 #include "particles.c"
 
-#define SAMPLES_TO_SHOW 48000
+#define SAMPLES_TO_SHOW 44100
 i32 currentPosition;
 i16 soundSamples[SAMPLES_TO_SHOW];
 
@@ -30,7 +30,7 @@ typedef enum GameState
     GameEnd
 } GameState;
 
-GameState gameState = GameStart;
+GameState gameState = GamePlaying;
 i32 isFullscreen = 1;
 
 V2i clientAreaSize = {0};
@@ -77,9 +77,6 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_KEYDOWN)
     {
-        if (wParam == VK_SPACE)
-            toneHz = 312.0f;
-
         if (wParam == VK_SPACE && (gameState == GameStart || gameState == GameEnd))
         {
             StartGame();
@@ -98,9 +95,6 @@ LRESULT OnEvent(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
     }
     else if (message == WM_KEYUP)
     {
-        if (wParam == VK_SPACE)
-            toneHz = 256.0f;
-
         if (wParam < 256)
             keys[wParam] = 0;
         // if (wParam == VK_SPACE)
@@ -146,6 +140,7 @@ float vertices[] = {0.0f, 0.0f,
 
 StrBuff uiLabel;
 FontData *currentFont;
+u64 start;
 void DrawStrBuff(StrBuff *hudLabel, f32 x, f32 y)
 {
     for (i32 i = 0; i < hudLabel->size; i++)
@@ -179,75 +174,17 @@ void StartGame()
     // Initial seed is still the game, thus if you restart the exe file - you will have the same game
 }
 
-void DisplaySoundWave()
+void ShowTime()
 {
-
-    glUseProgram(uiProgram);
-    glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
-    glUniform4f(colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
-
-    glBindVertexArray(vertexArray);
-
-    i32 lastPeakAt = -1;
-
-    i32 currentPeak = 0;
-    i32 peaksIndexes[SAMPLES_TO_SHOW];
-
-    i32 firstPeakAt = 0;
-    for (i32 i = 0; i < SAMPLES_TO_SHOW; i++)
-    {
-        if (i > 0 && i < SAMPLES_TO_SHOW && soundSamples[i - 1] <= soundSamples[i] && soundSamples[i] > soundSamples[i + 1])
-        {
-            peaksIndexes[currentPeak++] = i;
-
-            if (firstPeakAt == 0)
-                firstPeakAt = i;
-        }
-
-        if (firstPeakAt > 0)
-        {
-            i16 sample = soundSamples[i];
-            Mat4 view;
-            f32 w = (f32)clientAreaSize.x / SAMPLES_TO_SHOW;
-            f32 h;
-            f32 x = w * (i - firstPeakAt);
-            f32 y;
-            glUniform4f(colorLocation, 0.6f, 1.0f, 1.0f, 1.0f);
-            if (sample > 0)
-            {
-                h = (f32)sample / toneVolume * 100;
-                y = (f32)clientAreaSize.y / 2;
-            }
-            else
-            {
-                h = (f32)-sample / toneVolume * 100;
-                y = (f32)clientAreaSize.y / 2 - h;
-            }
-            view = Mat4ScaleXY(Mat4TranslateXY(Mat4Identity(), x, y), w, h);
-            glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view.values);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
-        }
-    }
-
-    f32 totalPeakDistance = 0;
-    for (int i = 0; i < currentPeak - 1; i++)
-    {
-        totalPeakDistance += (peaksIndexes[i + 1] - peaksIndexes[i]);
-    }
-
-    // samplesPerSecond
-    // cyclesPerSecond
-    // samples
-    f32 averagePeakDistance = totalPeakDistance / currentPeak;
 
     glUseProgram(fontProgram);
     glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
 
     glBindVertexArray(fontVertexArray);
 
+    u32 msPassed = (((f64)(GetPerfCounter() - start) * 1000) / (f64)frequency);
     StrBuffClear(&uiLabel);
-    f32 givenHz = samplesPerSecond / averagePeakDistance;
-    StrBuffAppendf32(&uiLabel, givenHz, 3);
+    StrBuffAppendi32(&uiLabel, msPassed);
     currentFont = &codeFont;
     DrawStrBuff(&uiLabel, 0, 0);
 }
@@ -284,7 +221,7 @@ typedef struct WavData
 void ReadSound()
 {
 
-    FileContent file = ReadMyFileImp("..\\assets\\music_test.wav");
+    FileContent file = ReadMyFileImp("..\\assets\\not2.wav");
 
     WavRiff *riff = (WavRiff *)file.content;
     WavHeader *header = (WavHeader *)(riff + 1);
@@ -294,12 +231,12 @@ void ReadSound()
     samplesToPlay = (u16 *)data->data;
 }
 
-int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-// void __stdcall WinMainCRTStartup()
+// int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+void __stdcall WinMainCRTStartup()
 {
     InitPerf();
 
-    // HINSTANCE instance = GetModuleHandle(0);
+    HINSTANCE instance = GetModuleHandle(0);
     PreventWindowsDPIScaling();
     HWND window = OpenAppWindowWithSize(instance, OnEvent, 1800, 1200);
     HDC dc = GetDC(window);
@@ -311,7 +248,7 @@ int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nC
     ReadSound();
 
     InitSound(window);
-    FirstFillSoundAndPlay(toneHz);
+    FirstFillSoundAndPlay();
 
     if (isFullscreen)
         SetFullscreen(window, isFullscreen);
@@ -363,6 +300,10 @@ int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nC
     InitEnemies();
     InitParticles();
 
+    start = GetPerfCounter();
+
+    if (gameState == GamePlaying)
+        StartGame();
     while (isRunning)
     {
         StartMetric(Overall);
@@ -377,169 +318,179 @@ int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nC
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        WriteSound(toneHz);
+        WriteSound();
 
-        DisplaySoundWave();
+        ShowTime();
 
-        // if (gameState == GameStart)
-        // {
-        //     glUseProgram(fontProgram);
-        //     glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
-        //     glBindVertexArray(fontVertexArray);
+        f32 secPassed = (((f64)(GetPerfCounter() - start)) / (f64)frequency);
+        if (gameState == GameStart)
+        {
+            glUseProgram(fontProgram);
+            glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
+            glBindVertexArray(fontVertexArray);
 
-        //     currentFont = &titleFont;
+            currentFont = &titleFont;
 
-        //     StrBuffSetStr(&uiLabel, "Rhythm Drift");
+            StrBuffSetStr(&uiLabel, "Rhythm Drift");
 
-        //     f32 x = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
-        //     f32 y = clientAreaSize.y / 2 - currentFont->charHeight / 2;
-        //     DrawStrBuff(&uiLabel, x, y);
+            f32 x = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
+            f32 y = clientAreaSize.y / 2 - currentFont->charHeight / 2;
+            DrawStrBuff(&uiLabel, x, y);
 
-        //     currentFont = &bigFont;
-        //     StrBuffSetStr(&uiLabel, "press SPACE key to smash...");
-        //     f32 x2 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
-        //     y -= currentFont->charHeight * 2;
-        //     DrawStrBuff(&uiLabel, x2, y);
+            currentFont = &bigFont;
+            StrBuffSetStr(&uiLabel, "press SPACE key to smash...");
+            f32 x2 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
+            y -= currentFont->charHeight * 2;
+            DrawStrBuff(&uiLabel, x2, y);
 
-        //     currentFont = &codeFont;
-        //     y -= 100;
-        //     StrBuffSetStr(&uiLabel, "WASD: move white square around");
-        //     f32 x3 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
-        //     y -= currentFont->charHeight * 1.5f;
-        //     DrawStrBuff(&uiLabel, x3, y);
+            currentFont = &codeFont;
+            y -= 100;
+            StrBuffSetStr(&uiLabel, "WASD: move white square around");
+            f32 x3 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
+            y -= currentFont->charHeight * 1.5f;
+            DrawStrBuff(&uiLabel, x3, y);
 
-        //     StrBuffSetStr(&uiLabel, "Mouse: aim and shoot");
-        //     y -= currentFont->charHeight * 1.5f;
-        //     DrawStrBuff(&uiLabel, x3, y);
+            StrBuffSetStr(&uiLabel, "Mouse: aim and shoot");
+            y -= currentFont->charHeight * 1.5f;
+            DrawStrBuff(&uiLabel, x3, y);
 
-        //     StrBuffSetStr(&uiLabel, "Blue progress bar top-left is your health");
-        //     y -= currentFont->charHeight * 1.5f;
-        //     DrawStrBuff(&uiLabel, x3, y);
-        // }
-        // else if (gameState == GameEnd)
-        // {
-        //     glUseProgram(fontProgram);
-        //     glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
-        //     glBindVertexArray(fontVertexArray);
+            StrBuffSetStr(&uiLabel, "Blue progress bar top-left is your health");
+            y -= currentFont->charHeight * 1.5f;
+            DrawStrBuff(&uiLabel, x3, y);
+        }
+        else if (gameState == GameEnd)
+        {
+            glUseProgram(fontProgram);
+            glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
+            glBindVertexArray(fontVertexArray);
 
-        //     currentFont = &titleFont;
+            currentFont = &titleFont;
 
-        //     StrBuffSetStr(&uiLabel, "Game Over");
+            StrBuffSetStr(&uiLabel, "Game Over");
 
-        //     f32 x = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
-        //     f32 y = clientAreaSize.y / 2 - currentFont->charHeight / 2;
-        //     DrawStrBuff(&uiLabel, x, y);
+            f32 x = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
+            f32 y = clientAreaSize.y / 2 - currentFont->charHeight / 2;
+            DrawStrBuff(&uiLabel, x, y);
 
-        //     StrBuffSetStr(&uiLabel, "Your Score: ");
-        //     StrBuffAppendi32(&uiLabel, score);
+            StrBuffSetStr(&uiLabel, "Your Score: ");
+            StrBuffAppendi32(&uiLabel, score);
 
-        //     f32 x2 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
-        //     y -= currentFont->charHeight;
-        //     DrawStrBuff(&uiLabel, x2, y);
+            f32 x2 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
+            y -= currentFont->charHeight;
+            DrawStrBuff(&uiLabel, x2, y);
 
-        //     currentFont = &bigFont;
-        //     StrBuffSetStr(&uiLabel, "press SPACE key to restart...");
-        //     f32 x3 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
-        //     y -= currentFont->charHeight * 2;
+            currentFont = &bigFont;
+            StrBuffSetStr(&uiLabel, "press SPACE key to restart...");
+            f32 x3 = clientAreaSize.x / 2 - uiLabel.size * currentFont->charWidth / 2;
+            y -= currentFont->charHeight * 2;
 
-        //     DrawStrBuff(&uiLabel, x3, y);
-        // }
-        // else
-        // {
+            DrawStrBuff(&uiLabel, x3, y);
+        }
+        else
+        {
 
-        //     // Update
-        //     V2f delta = {0};
-        //     if (keys['W'])
-        //         delta.y = 1.0f;
-        //     else if (keys['S'])
-        //         delta.y = -1.0f;
+            // Update
+            V2f delta = {0};
+            if (keys['W'])
+                delta.y = 1.0f;
+            else if (keys['S'])
+                delta.y = -1.0f;
 
-        //     if (keys['A'])
-        //         delta.x = -1.0f;
-        //     else if (keys['D'])
-        //         delta.x = 1.0f;
+            if (keys['A'])
+                delta.x = -1.0f;
+            else if (keys['D'])
+                delta.x = 1.0f;
 
-        //     if (delta.x != 0.0f && delta.y != 0.0f)
-        //         delta = V2fMult(delta, ONE_OVER_SQUARE_ROOT_OF_TWO);
+            if (delta.x != 0.0f && delta.y != 0.0f)
+                delta = V2fMult(delta, ONE_OVER_SQUARE_ROOT_OF_TWO);
 
-        //     delta = V2fMult(delta, playerSpeed);
-        //     playerPosition = V2fAdd(playerPosition, delta);
+            delta = V2fMult(delta, playerSpeed);
+            playerPosition = V2fAdd(playerPosition, delta);
 
-        //     playerPosition.x = Clamp(playerPosition.x, 0, clientAreaSize.x - playerSize);
-        //     playerPosition.y = Clamp(playerPosition.y, 0, clientAreaSize.y - playerSize);
+            playerPosition.x = Clamp(playerPosition.x, 0, clientAreaSize.x - playerSize);
+            playerPosition.y = Clamp(playerPosition.y, 0, clientAreaSize.y - playerSize);
 
-        //     HandleCollisions(playerPosition, clientAreaSize, &score, &playerHealth);
+            HandleCollisions(playerPosition, clientAreaSize, &score, &playerHealth);
 
-        //     if (playerHealth <= 0)
-        //         gameState = GameEnd;
+            if (playerHealth <= 0)
+                gameState = GameEnd;
 
-        //     UpdateBullets(playerPosition, clientAreaSize);
-        //     UpdateEnemies(clientAreaSize, playerPosition);
-        //     UpdateParticles();
+            UpdateBullets(playerPosition, clientAreaSize);
+            UpdateEnemies(clientAreaSize, playerPosition, secPassed);
+            UpdateParticles();
 
-        //     // Draw
+            //
+            // Draw
+            //
 
-        //     glUseProgram(uiProgram);
-        //     glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
-        //     glUniform4f(colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+            glUseProgram(uiProgram);
+            glUniformMatrix4fv(projectionLocation, 1, GL_TRUE, projection.values);
+            glUniform4f(colorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
 
-        //     Mat4 view = Mat4ScaleUniform(Mat4TranslateV2f(Mat4Identity(), playerPosition), playerSize);
-        //     glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view.values);
+            Mat4 view = Mat4ScaleUniform(Mat4TranslateV2f(Mat4Identity(), playerPosition), playerSize);
 
-        //     glBindVertexArray(vertexArray);
-        //     glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
+            glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view.values);
 
-        //     DrawParticles(viewLocation, colorLocation);
-        //     DrawEnemies(viewLocation, colorLocation, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y});
-        //     DrawBullets(viewLocation, colorLocation);
+            glBindVertexArray(vertexArray);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
 
-        //     // HUD
+            DrawParticles(viewLocation, colorLocation);
+            DrawEnemies(viewLocation, colorLocation, (V2f){(f32)clientAreaSize.x, (f32)clientAreaSize.y});
+            DrawBullets(viewLocation, colorLocation);
 
-        //     // Player States
-        //     f32 maxHealthWidth = 200.0f;
-        //     f32 healthWidth = (f32)playerHealth / (f32)playerMaxHealth * maxHealthWidth;
-        //     Mat4 view3 = Mat4ScaleXY(Mat4TranslateXY(Mat4Identity(), 20, clientAreaSize.y - 20 - 40), healthWidth, 40);
-        //     glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view3.values);
-        //     glUniform4f(colorLocation, 0.2f, 0.2f, 1.0f, 1.0f);
-        //     glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
+            // HUD
 
-        //     //
-        //     // Font stuff
-        //     //
-        //     glUseProgram(fontProgram);
-        //     glBindVertexArray(fontVertexArray);
-        //     glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
+            // Player States
+            f32 maxHealthWidth = 200.0f;
+            f32 healthWidth = (f32)playerHealth / (f32)playerMaxHealth * maxHealthWidth;
+            Mat4 view3 = Mat4ScaleXY(Mat4TranslateXY(Mat4Identity(), 20, clientAreaSize.y - 20 - 40), healthWidth, 40);
+            glUniformMatrix4fv(viewLocation, 1, GL_TRUE, view3.values);
+            glUniform4f(colorLocation, 0.2f, 0.2f, 1.0f, 1.0f);
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, ArrayLength(vertices) / POINTS_PER_VERTEX);
 
-        //     currentFont = &codeFont;
-        //     StrBuffClear(&uiLabel);
-        //     StrBuffAppendStr(&uiLabel, "Overall: ");
-        //     StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(Overall));
-        //     StrBuffAppendStr(&uiLabel, "ms");
-        //     DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 0);
+            //
+            // Font stuff
+            //
+            glUseProgram(fontProgram);
+            glBindVertexArray(fontVertexArray);
+            glUniformMatrix4fv(projectionLocationFont, 1, GL_TRUE, projection.values);
 
-        //     StrBuffClear(&uiLabel);
-        //     StrBuffAppendStr(&uiLabel, "OverallNoSwap: ");
-        //     StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(OverallWithoutSwap));
-        //     StrBuffAppendStr(&uiLabel, "ms");
-        //     DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 1);
+            currentFont = &codeFont;
+            StrBuffClear(&uiLabel);
+            StrBuffAppendStr(&uiLabel, "Overall: ");
+            StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(Overall));
+            StrBuffAppendStr(&uiLabel, "ms");
+            DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 0);
 
-        //     StrBuffClear(&uiLabel);
-        //     StrBuffAppendStr(&uiLabel, "Spawn: ");
-        //     StrBuffAppendf32(&uiLabel, enemiesPerSecond, 2);
-        //     StrBuffAppendStr(&uiLabel, "m/s");
-        //     DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 3);
+            StrBuffClear(&uiLabel);
+            StrBuffAppendStr(&uiLabel, "OverallNoSwap: ");
+            StrBuffAppendi32(&uiLabel, GetMicrosecondsFor(OverallWithoutSwap));
+            StrBuffAppendStr(&uiLabel, "ms");
+            DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 1);
 
-        //     StrBuffClear(&uiLabel);
-        //     StrBuffAppendStr(&uiLabel, "Spawned: ");
-        //     StrBuffAppendi32(&uiLabel, mostersSpawned);
-        //     DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 4);
+            StrBuffClear(&uiLabel);
+            StrBuffAppendStr(&uiLabel, "Spawn: ");
+            StrBuffAppendf32(&uiLabel, enemiesPerSecond, 2);
+            StrBuffAppendStr(&uiLabel, "m/s");
+            DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 3);
 
-        //     currentFont = &bigFont;
-        //     StrBuffClear(&uiLabel);
-        //     StrBuffAppendStr(&uiLabel, "Score: ");
-        //     StrBuffAppendi32(&uiLabel, score);
-        //     DrawStrBuff(&uiLabel, clientAreaSize.x / 2 - 200, clientAreaSize.y - bigFont.textMetric.tmHeight);
-        // }
+            StrBuffClear(&uiLabel);
+            StrBuffAppendStr(&uiLabel, "Spawned: ");
+            StrBuffAppendi32(&uiLabel, mostersSpawned);
+            DrawStrBuff(&uiLabel, 0, codeFont.textMetric.tmHeight * 4);
+
+            currentFont = &bigFont;
+            StrBuffClear(&uiLabel);
+            StrBuffAppendStr(&uiLabel, "Score: ");
+            StrBuffAppendi32(&uiLabel, score);
+            DrawStrBuff(&uiLabel, clientAreaSize.x / 2 - 200, clientAreaSize.y - bigFont.textMetric.tmHeight);
+
+            u32 msPassed = (((f64)(GetPerfCounter() - start) * 1000) / (f64)frequency);
+            StrBuffClear(&uiLabel);
+            StrBuffAppendi32(&uiLabel, msPassed);
+            currentFont = &codeFont;
+            DrawStrBuff(&uiLabel, 0, 0);
+        }
 
         EndMetric(OverallWithoutSwap);
         SwapBuffers(dc);
@@ -547,6 +498,5 @@ int wWinMain(HINSTANCE instance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nC
         appTime += 16.66666f;
         EndMetric(Overall);
     }
-    return 0;
-    // ExitProcess(0);
+    ExitProcess(0);
 }
